@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { StyleSheet, Text, View, useWindowDimensions, LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
@@ -15,16 +15,25 @@ import { useDeck } from "@/hooks/useDeck";
 import { useSettings } from "@/hooks/useSettings";
 import { playFlipSound } from "@/services/soundService";
 
+// Локальні хелпери для адаптивності
+const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+const scaleFont = (fontSize: number, width: number) => Math.round((fontSize * width) / 375);
+
+const ScreenBreakpoints = {
+  isTinyHeight: (h: number) => h < 600,
+  isShortHeight: (h: number) => h < 670,
+  isTablet: (w: number) => w >= 768,
+};
+
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
-  // Адаптивні пороги
-  const isSmallScreen = windowHeight < 670; // Наприклад iPhone SE або Telegram Webview
-  const isShortScreen = windowHeight < 600; // Низькі екрани / альбомна орієнтація
-  const isTablet = windowWidth >= 768;      // Планшети
+  const isTinyHeight = ScreenBreakpoints.isTinyHeight(windowHeight);
+  const isShortHeight = ScreenBreakpoints.isShortHeight(windowHeight);
+  const isTablet = ScreenBreakpoints.isTablet(windowWidth);
 
   const {
     currentCard,
@@ -40,6 +49,7 @@ export function HomeScreen({ navigation }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const confettiRef = useRef<ConfettiCannon>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [bodyHeight, setBodyHeight] = useState(0);
 
   const handleFlip = () => {
     if (currentCard === null) {
@@ -73,11 +83,22 @@ export function HomeScreen({ navigation }: Props) {
     }
   }, [deckJustFinished]);
 
-  // Розрахунок адаптивних розмірів елементів
-  const headerHeight = isSmallScreen ? 42 : 50;
-  const logoSize = isSmallScreen ? 26 : 32;
-  const finishedLogoSize = isSmallScreen ? 70 : 90;
-  const buttonHeight = isSmallScreen ? 44 : 50;
+  const handleBodyLayout = useCallback((e: LayoutChangeEvent) => {
+    setBodyHeight(e.nativeEvent.layout.height);
+  }, []);
+
+  // Безперервне масштабування під розміри екрана
+  const headerHeight = clamp(windowHeight * 0.055, 38, 52);
+  const logoSize = clamp(windowWidth * 0.075, 22, 32);
+  const finishedLogoSize = clamp(windowWidth * 0.2, 60, 90);
+  const buttonHeight = clamp(windowHeight * 0.058, 42, 52);
+  const menuButtonSize = clamp(windowWidth * 0.1, 34, 40);
+  const headerTitleSize = clamp(scaleFont(16, windowWidth), 14, 19);
+  const finishedTitleSize = clamp(scaleFont(19, windowWidth), 16, 22);
+  const finishedSubtitleSize = clamp(scaleFont(12, windowWidth), 11, 14);
+
+  // Доступний простір під картку
+  const cardMaxHeight = bodyHeight > 0 ? bodyHeight * 0.96 : windowHeight * 0.5;
 
   return (
     <GradientBackground>
@@ -90,15 +111,13 @@ export function HomeScreen({ navigation }: Props) {
           },
         ]}
       >
-        {/* Максимальна ширина для планшетів */}
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
-          
           {/* 1. Хедер */}
           <View style={[styles.header, { height: headerHeight }]}>
             <View style={styles.brandContainer}>
               <FlamingoLogo size={logoSize} />
-              <Text 
-                style={[styles.headerTitle, isSmallScreen && styles.smallHeaderTitle]}
+              <Text
+                style={[styles.headerTitle, { fontSize: headerTitleSize }]}
                 maxFontSizeMultiplier={1.2}
               >
                 ВХЛАМІНГО
@@ -110,23 +129,21 @@ export function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("Menu")}
               style={{
                 ...styles.menuButton,
-                width: isSmallScreen ? 36 : 40,
-                height: isSmallScreen ? 36 : 40,
-                borderRadius: isSmallScreen ? 18 : 20,
+                width: menuButtonSize,
+                height: menuButtonSize,
+                borderRadius: menuButtonSize / 2,
               }}
               hapticsEnabled={settings.hapticsEnabled}
             />
           </View>
 
           {/* 2. Основна зона */}
-          <View style={[styles.body, isShortScreen && { paddingVertical: 0 }]}>
+          <View
+            style={[styles.body, isShortHeight && { paddingVertical: 0 }]}
+            onLayout={handleBodyLayout}
+          >
             {!isLoading && !deckJustFinished && (
-              <View 
-                style={[
-                  styles.cardWrapper, 
-                  { maxHeight: windowHeight * (isSmallScreen ? 0.52 : 0.58) }
-                ]}
-              >
+              <View style={[styles.cardWrapper, { maxHeight: cardMaxHeight }]}>
                 <FlipCard
                   card={currentCard}
                   isFlipped={isFlipped}
@@ -136,20 +153,23 @@ export function HomeScreen({ navigation }: Props) {
               </View>
             )}
 
-            {/* Екран завершення колоди */}
             {deckJustFinished && (
               <View style={styles.finishedBox}>
                 <View style={styles.finishedLogoWrapper}>
                   <FlamingoLogo size={finishedLogoSize} />
                 </View>
-                <Text 
-                  style={[styles.finishedTitle, isSmallScreen && { fontSize: 18 }]}
+                <Text
+                  style={[styles.finishedTitle, { fontSize: finishedTitleSize }]}
                   maxFontSizeMultiplier={1.2}
                 >
                   ВСІ КАРТКИ ВІДКРИТО!
                 </Text>
-                <Text 
-                  style={[styles.finishedSubtitle, isSmallScreen && { fontSize: 12, marginBottom: 16 }]}
+                <Text
+                  style={[
+                    styles.finishedSubtitle,
+                    { fontSize: finishedSubtitleSize },
+                    isTinyHeight && { marginBottom: 14 },
+                  ]}
                   maxFontSizeMultiplier={1.2}
                 >
                   Час перемішати колоду та продовжити вечірку 🍾
@@ -171,7 +191,7 @@ export function HomeScreen({ navigation }: Props) {
           <View style={styles.footer}>
             {!deckJustFinished && (
               <>
-                <View style={[styles.counterContainer, isSmallScreen && { marginBottom: 4 }]}>
+                <View style={[styles.counterContainer, isTinyHeight && { marginBottom: 4 }]}>
                   <CardCounter shown={shownCount} total={totalCount} />
                 </View>
 
@@ -187,14 +207,13 @@ export function HomeScreen({ navigation }: Props) {
               </>
             )}
           </View>
-
         </View>
       </View>
 
       {showConfetti && (
         <ConfettiCannon
           ref={confettiRef}
-          count={isSmallScreen ? 80 : 120}
+          count={isTinyHeight ? 80 : 120}
           origin={{ x: windowWidth / 2, y: -20 }}
           fadeOut
           autoStart
@@ -219,7 +238,6 @@ const styles = StyleSheet.create({
   tabletConstraint: {
     maxWidth: 480,
   },
-  /* Header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -234,17 +252,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerTitle: {
-    fontSize: 18,
     fontWeight: "900",
     color: Colors.cream,
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
     textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
-  },
-  smallHeaderTitle: {
-    fontSize: 16,
-    letterSpacing: 1,
   },
   menuButton: {
     justifyContent: "center",
@@ -252,7 +265,6 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     paddingHorizontal: 0,
   },
-  /* Body */
   body: {
     flex: 1,
     alignItems: "center",
@@ -266,7 +278,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  /* Footer */
   footer: {
     paddingHorizontal: 16,
     paddingTop: 4,
@@ -281,7 +292,6 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
   },
-  /* Finished Screen */
   finishedBox: {
     alignItems: "center",
     justifyContent: "center",
@@ -297,14 +307,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   finishedTitle: {
-    fontSize: 20,
     fontWeight: "900",
     color: Colors.cream,
     textAlign: "center",
     letterSpacing: 1,
   },
   finishedSubtitle: {
-    fontSize: 13,
     color: "rgba(255, 255, 255, 0.75)",
     textAlign: "center",
     marginTop: 6,
@@ -313,5 +321,6 @@ const styles = StyleSheet.create({
   },
   reshuffleButton: {
     width: "100%",
+    justifyContent: "center",
   },
 });
