@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -16,6 +17,12 @@ import { getRandomQuote } from "@/constants/quotes";
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
 
 export function SplashScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+
+  // Поріг для компактних пристроїв (iPhone SE, Telegram Webview)
+  const isSmallScreen = windowHeight < 670;
+
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(24);
   const [quote] = useState(getRandomQuote());
@@ -36,13 +43,35 @@ export function SplashScreen({ navigation }: Props) {
     transform: [{ translateY: translateY.value }],
   }));
 
+  // Адаптивні параметри
+  const logoSize = isSmallScreen ? 100 : 130;
+  const titleFontSize = isSmallScreen ? 34 : 42;
+
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
         <Animated.View style={[styles.content, animatedStyle]}>
-          <FlamingoLogo size={140} />
-          <Text style={styles.title}>Вхламінго</Text>
-          <Text style={styles.subtitle}>{quote}</Text>
+          <FlamingoLogo size={logoSize} />
+          <Text
+            style={[styles.title, { fontSize: titleFontSize }]}
+            maxFontSizeMultiplier={1.2}
+          >
+            Вхламінго
+          </Text>
+          <Text
+            style={styles.subtitle}
+            maxFontSizeMultiplier={1.2}
+          >
+            {quote}
+          </Text>
         </Animated.View>
       </View>
     </GradientBackground>
@@ -54,22 +83,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 24,
   },
   content: {
     alignItems: "center",
+    maxWidth: 400, // Обмеження для планшетів та десктопу
+    width: "100%",
   },
   title: {
-    marginTop: 20,
-    fontSize: 44,
+    marginTop: 16,
     fontWeight: "800",
     color: Colors.cream,
     letterSpacing: 1,
+    textAlign: "center",
   },
   subtitle: {
-    marginTop: 14,
+    marginTop: 12,
     fontSize: 15,
+    lineHeight: 22,
     color: Colors.textSecondary,
     textAlign: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: 12,
   },
 });

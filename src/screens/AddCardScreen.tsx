@@ -8,7 +8,10 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList, GameCard } from "@/types";
 import { GradientBackground } from "@/components/GradientBackground";
@@ -22,6 +25,12 @@ import { generateId } from "@/utils/shuffle";
 type Props = NativeStackScreenProps<RootStackParamList, "AddCard">;
 
 export function AddCardScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  const isSmallScreen = windowHeight < 670;
+  const isTablet = windowWidth >= 768;
+
   const { settings } = useSettings();
   const [text, setText] = useState("");
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -54,6 +63,7 @@ export function AddCardScreen({ navigation }: Props) {
       persist([newCard, ...cards]);
     }
     setText("");
+    Keyboard.dismiss();
   };
 
   const handleEdit = (card: GameCard) => {
@@ -70,61 +80,101 @@ export function AddCardScreen({ navigation }: Props) {
     }
   };
 
+  const buttonHeight = isSmallScreen ? 44 : 50;
+
   return (
     <GradientBackground>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
-        <View style={styles.container}>
-          <Text style={styles.title}>Власні картки</Text>
+        <View
+          style={[
+            styles.container,
+            {
+              paddingTop: Math.max(insets.top + 12, 24),
+              paddingBottom: Math.max(insets.bottom + 12, 16),
+            },
+          ]}
+        >
+          <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
+            <Text
+              style={[styles.title, isSmallScreen && styles.smallTitle]}
+              maxFontSizeMultiplier={1.2}
+            >
+              Власні картки
+            </Text>
 
-          <GlassPanel style={styles.inputPanel}>
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder="Введи текст завдання..."
-              placeholderTextColor={Colors.textSecondary}
-              style={styles.input}
-              multiline
+            {/* Форма вводу */}
+            <GlassPanel style={styles.inputPanel}>
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                placeholder="Введи текст завдання..."
+                placeholderTextColor={Colors.textSecondary}
+                style={[styles.input, isSmallScreen && { minHeight: 50 }]}
+                multiline
+                maxFontSizeMultiplier={1.2}
+              />
+              <GlowButton
+                label={editingId ? "Зберегти зміни" : "Додати картку"}
+                onPress={handleSubmit}
+                hapticsEnabled={settings.hapticsEnabled}
+                style={{
+                  ...styles.submitButton,
+                  height: buttonHeight,
+                }}
+              />
+            </GlassPanel>
+
+            {/* Список створених карток */}
+            <FlatList
+              data={cards}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <Text style={styles.emptyText} maxFontSizeMultiplier={1.2}>
+                  Ще немає власних карток
+                </Text>
+              }
+              renderItem={({ item }) => (
+                <GlassPanel style={styles.cardRow}>
+                  <Text style={styles.cardText} maxFontSizeMultiplier={1.2}>
+                    {item.text}
+                  </Text>
+                  <View style={styles.rowActions}>
+                    <Pressable
+                      onPress={() => handleEdit(item)}
+                      style={styles.iconButton}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.iconText}>✏️</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDelete(item.id)}
+                      style={styles.iconButton}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.iconText}>🗑️</Text>
+                    </Pressable>
+                  </View>
+                </GlassPanel>
+              )}
             />
+
+            {/* Кнопка назад */}
             <GlowButton
-              label={editingId ? "Зберегти зміни" : "Додати картку"}
-              onPress={handleSubmit}
+              label="Назад"
+              variant="glass"
+              onPress={() => navigation.goBack()}
               hapticsEnabled={settings.hapticsEnabled}
-              style={styles.submitButton}
+              style={{
+                ...styles.backButton,
+                height: buttonHeight,
+              }}
             />
-          </GlassPanel>
-
-          <FlatList
-            data={cards}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>Ще немає власних карток</Text>
-            }
-            renderItem={({ item }) => (
-              <GlassPanel style={styles.cardRow}>
-                <Text style={styles.cardText}>{item.text}</Text>
-                <View style={styles.rowActions}>
-                  <Pressable onPress={() => handleEdit(item)} style={styles.iconButton}>
-                    <Text style={styles.iconText}>✏️</Text>
-                  </Pressable>
-                  <Pressable onPress={() => handleDelete(item.id)} style={styles.iconButton}>
-                    <Text style={styles.iconText}>🗑️</Text>
-                  </Pressable>
-                </View>
-              </GlassPanel>
-            )}
-          />
-
-          <GlowButton
-            label="Назад"
-            variant="glass"
-            onPress={() => navigation.goBack()}
-            hapticsEnabled={settings.hapticsEnabled}
-            style={styles.backButton}
-          />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </GradientBackground>
@@ -137,8 +187,15 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: 60,
     paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  contentWrapper: {
+    flex: 1,
+    width: "100%",
+  },
+  tabletConstraint: {
+    maxWidth: 480,
   },
   title: {
     fontSize: 26,
@@ -146,8 +203,13 @@ const styles = StyleSheet.create({
     color: Colors.cream,
     marginBottom: 16,
   },
+  smallTitle: {
+    fontSize: 22,
+    marginBottom: 12,
+  },
   inputPanel: {
     marginBottom: 16,
+    padding: 14,
   },
   input: {
     color: Colors.cream,
@@ -156,18 +218,22 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   submitButton: {
-    marginTop: 14,
+    marginTop: 12,
+    width: "100%",
+    justifyContent: "center",
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   emptyText: {
     color: Colors.textSecondary,
     textAlign: "center",
     marginTop: 30,
+    fontSize: 14,
   },
   cardRow: {
-    marginBottom: 12,
+    marginBottom: 10,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -177,13 +243,14 @@ const styles = StyleSheet.create({
     color: Colors.cream,
     fontSize: 14,
     marginRight: 10,
+    lineHeight: 20,
   },
   rowActions: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
   },
   iconButton: {
-    padding: 6,
+    padding: 8,
     borderRadius: Radius.sm,
     backgroundColor: "rgba(255,255,255,0.1)",
   },
@@ -191,6 +258,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   backButton: {
-    marginBottom: 20,
+    marginTop: 8,
+    width: "100%",
+    justifyContent: "center",
   },
 });

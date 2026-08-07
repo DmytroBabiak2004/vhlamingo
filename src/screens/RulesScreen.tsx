@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, ScrollView } from "react-native";
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
 import { GradientBackground } from "@/components/GradientBackground";
@@ -22,50 +23,99 @@ const RULES = [
 ];
 
 export function RulesScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  const isSmallScreen = windowHeight < 670;
+  const isTablet = windowWidth >= 768;
+
   const { settings } = useSettings();
+  const buttonHeight = isSmallScreen ? 44 : 50;
 
   return (
     <GradientBackground>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Правила гри</Text>
-        <GlassPanel>
-          {RULES.map((rule, index) => (
-            <Text key={index} style={styles.ruleText}>
-              {index + 1}. {rule}
-            </Text>
-          ))}
-        </GlassPanel>
-        <GlowButton
-          label="Назад"
-          variant="glass"
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hapticsEnabled={settings.hapticsEnabled}
-        />
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          {
+            paddingTop: Math.max(insets.top + 12, 24),
+            paddingBottom: Math.max(insets.bottom + 16, 32),
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
+          <Text
+            style={[styles.title, isSmallScreen && styles.smallTitle]}
+            maxFontSizeMultiplier={1.2}
+          >
+            Правила гри
+          </Text>
+
+          <GlassPanel style={styles.panel}>
+            {RULES.map((rule, index) => (
+              <Text
+                key={index}
+                style={[
+                  styles.ruleText,
+                  index === RULES.length - 1 && { marginBottom: 0 },
+                ]}
+                maxFontSizeMultiplier={1.2}
+              >
+                {index + 1}. {rule}
+              </Text>
+            ))}
+          </GlassPanel>
+
+          <GlowButton
+            label="Назад"
+            variant="glass"
+            onPress={() => navigation.goBack()}
+            style={{
+              ...styles.backButton,
+              height: buttonHeight,
+            }}
+            hapticsEnabled={settings.hapticsEnabled}
+          />
+        </View>
       </ScrollView>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingTop: 64,
-    paddingHorizontal: 22,
-    paddingBottom: 50,
+  scrollContainer: {
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  contentWrapper: {
+    width: "100%",
+  },
+  tabletConstraint: {
+    maxWidth: 480,
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "800",
     color: Colors.cream,
-    marginBottom: 22,
+    marginBottom: 18,
+  },
+  smallTitle: {
+    fontSize: 24,
+    marginBottom: 14,
+  },
+  panel: {
+    padding: 16,
   },
   ruleText: {
     fontSize: 15,
     color: Colors.textPrimary,
-    lineHeight: 24,
-    marginBottom: 10,
+    lineHeight: 22,
+    marginBottom: 12,
   },
   backButton: {
-    marginTop: 24,
+    marginTop: 20,
+    width: "100%",
+    justifyContent: "center",
   },
 });
