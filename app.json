@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Вхламінго",
+    "slug": "vhlamingo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#8B0000",
+      "resizeMode": "cover"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vhlamingo.app"
+    },
+    "android": {
+      "package": "com.vhlamingo.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#8B0000"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-av"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b4696c52-b24a-4959-9726-b82eb42a993d"
+      }
+    }
+  }
+}
