@@ -8,6 +8,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Colors, Gradients, Radius, Shadow } from "@/constants/colors";
+import { useResponsive } from "@/utils/responsive";
 
 interface GlowButtonProps {
   label: string;
@@ -15,18 +16,34 @@ interface GlowButtonProps {
   variant?: "solid" | "glass";
   style?: ViewStyle;
   hapticsEnabled?: boolean;
+  /** Для компактних (напр. круглих іконних) кнопок — прибирає горизонтальний внутрішній відступ. */
+  compact?: boolean;
 }
 
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
+/**
+ * Кнопка з підтримкою довільної висоти (передається через `style.height` з екрана).
+ * Внутрішній контент завжди центрується по флексу, тож текст ніколи не обрізається
+ * і не "виїжджає" за межі кнопки на маленьких екранах — на відміну від попередньої
+ * версії, де фіксований paddingVertical конфліктував із динамічною висотою.
+ */
 export function GlowButton({
   label,
   onPress,
   variant = "solid",
   style,
   hapticsEnabled = true,
+  compact = false,
 }: GlowButtonProps) {
+  const { font, sw } = useResponsive();
   const scale = useSharedValue(1);
+
+  const fontSize = variant === "glass" ? font(16, 14, 18) : font(17, 15, 19);
+  const paddingHorizontal = compact ? sw(6) : sw(28);
+  // borderRadius (напр. для круглих іконних кнопок) має застосовуватись і до
+  // видимого внутрішнього контенту, інакше форма зʼявляється лише на невидимій обгортці.
+  const borderRadiusOverride = style?.borderRadius as number | undefined;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -49,32 +66,65 @@ export function GlowButton({
 
   if (variant === "glass") {
     return (
-      <Animated.View style={[animatedStyle, style]}>
+      <Animated.View style={[styles.defaultSize, animatedStyle, style]}>
         <Pressable
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           onPress={handlePress}
-          style={[styles.glassButton, Shadow.button]}
+          style={styles.pressableFill}
         >
-          <View style={styles.topEdgeHighlight} />
-          <Text style={styles.glassLabel}>{label}</Text>
+          <View
+            style={[
+              styles.glassButton,
+              Shadow.button,
+              { paddingHorizontal },
+              borderRadiusOverride !== undefined && { borderRadius: borderRadiusOverride },
+            ]}
+          >
+            <View style={styles.topEdgeHighlight} />
+            <Text
+              style={[styles.glassLabel, { fontSize }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.2}
+            >
+              {label}
+            </Text>
+          </View>
         </Pressable>
       </Animated.View>
     );
   }
 
   return (
-    <Animated.View style={[animatedStyle, style]}>
-      <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handlePress}>
+    <Animated.View style={[styles.defaultSize, animatedStyle, style]}>
+      <Pressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={handlePress}
+        style={styles.pressableFill}
+      >
         <AnimatedGradient
           colors={Gradients.buttonPrimary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.solidButton, Shadow.neon]}
+          style={[
+            styles.solidButton,
+            Shadow.neon,
+            { paddingHorizontal },
+            borderRadiusOverride !== undefined && { borderRadius: borderRadiusOverride },
+          ]}
         >
-          {/* Inner Gloss Light Shimmer */}
+          {/* Внутрішній глянцевий відблиск */}
           <View style={styles.topEdgeHighlight} />
-          <Text style={styles.solidLabel}>{label}</Text>
+          <Text
+            style={[styles.solidLabel, { fontSize }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            maxFontSizeMultiplier={1.2}
+          >
+            {label}
+          </Text>
         </AnimatedGradient>
       </Pressable>
     </Animated.View>
@@ -82,9 +132,15 @@ export function GlowButton({
 }
 
 const styles = StyleSheet.create({
+  defaultSize: {
+    minHeight: 48,
+    width: "100%",
+  },
+  pressableFill: {
+    flex: 1,
+  },
   solidButton: {
-    paddingVertical: 18,
-    paddingHorizontal: 36,
+    flex: 1,
     borderRadius: Radius.lg,
     alignItems: "center",
     justifyContent: "center",
@@ -101,7 +157,6 @@ const styles = StyleSheet.create({
   },
   solidLabel: {
     color: Colors.cream,
-    fontSize: 17,
     fontWeight: "800",
     letterSpacing: 0.5,
     textShadowColor: "rgba(0,0,0,0.2)",
@@ -109,8 +164,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   glassButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    flex: 1,
     borderRadius: Radius.lg,
     alignItems: "center",
     justifyContent: "center",
@@ -122,7 +176,6 @@ const styles = StyleSheet.create({
   },
   glassLabel: {
     color: Colors.cream,
-    fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.3,
   },

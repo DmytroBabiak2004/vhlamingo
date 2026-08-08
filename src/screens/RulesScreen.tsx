@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
@@ -8,6 +8,7 @@ import { GlassPanel } from "@/components/GlassPanel";
 import { GlowButton } from "@/components/GlowButton";
 import { Colors } from "@/constants/colors";
 import { useSettings } from "@/hooks/useSettings";
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Rules">;
 
@@ -24,13 +25,11 @@ const RULES = [
 
 export function RulesScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const isSmallScreen = windowHeight < 670;
-  const isTablet = windowWidth >= 768;
+  const { isShortHeight, isTablet, font, clamp, height } = useResponsive();
 
   const { settings } = useSettings();
-  const buttonHeight = isSmallScreen ? 44 : 50;
+  const buttonHeight = clamp(height * 0.06, 44, 52);
+  const titleSize = font(28, 22, 32);
 
   return (
     <GradientBackground>
@@ -46,7 +45,7 @@ export function RulesScreen({ navigation }: Props) {
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
           <Text
-            style={[styles.title, isSmallScreen && styles.smallTitle]}
+            style={[styles.title, { fontSize: titleSize }, isShortHeight && { marginBottom: 14 }]}
             maxFontSizeMultiplier={1.2}
           >
             Правила гри
@@ -58,6 +57,7 @@ export function RulesScreen({ navigation }: Props) {
                 key={index}
                 style={[
                   styles.ruleText,
+                  { fontSize: font(15, 14, 17) },
                   index === RULES.length - 1 && { marginBottom: 0 },
                 ]}
                 maxFontSizeMultiplier={1.2}
@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 20,
     alignItems: "center",
+    flexGrow: 1,
   },
   contentWrapper: {
     width: "100%",
@@ -95,20 +96,12 @@ const styles = StyleSheet.create({
     maxWidth: 480,
   },
   title: {
-    fontSize: 28,
     fontWeight: "800",
     color: Colors.cream,
     marginBottom: 18,
   },
-  smallTitle: {
-    fontSize: 24,
-    marginBottom: 14,
-  },
-  panel: {
-    padding: 16,
-  },
+  panel: {},
   ruleText: {
-    fontSize: 15,
     color: Colors.textPrimary,
     lineHeight: 22,
     marginBottom: 12,

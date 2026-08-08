@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Text, View, Pressable, Dimensions, ScrollView } from "react-native";
+import { StyleSheet, Text, View, Pressable, ScrollView } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,10 +13,9 @@ import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Colors, Gradients, Radius, Shadow } from "@/constants/colors";
 import { FlamingoLogo } from "@/components/FlamingoLogo";
+import { useResponsive } from "@/utils/responsive";
 
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = Math.min(width * 0.84, 350);
-const CARD_HEIGHT = CARD_WIDTH * 1.42;
+const ASPECT_RATIO = 1.42; // height / width, як у початковому дизайні
 
 export interface GameCard {
   id?: string;
@@ -29,9 +28,36 @@ interface FlipCardProps {
   isFlipped: boolean;
   onFlip: () => void;
   hapticsEnabled: boolean;
+  /** Максимальна доступна висота під картку (від батьківського екрана). Якщо не задано — рахується від висоти вікна. */
+  maxHeight?: number;
 }
 
-export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled }: FlipCardProps) {
+/**
+ * Картка тепер повністю реактивна: розміри рахуються від поточних width/height
+ * (а не одноразово при завантаженні модуля через Dimensions.get), тож коректно
+ * підлаштовується під поворот екрана, спліт-скрін, різні телефони й планшети.
+ * Якщо картка за шириною не влазить по висоті (низькі екрани на кшталт iPhone SE
+ * в альбомній орієнтації) — розмір рахується від висоти, а не від ширини.
+ */
+export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }: FlipCardProps) {
+  const { width, height, isTablet, font, sw } = useResponsive();
+
+  const availableHeight = maxHeight ?? height * 0.62;
+  const rawMaxWidth = isTablet ? 420 : 360;
+
+  let cardWidth = Math.min(width * 0.86, rawMaxWidth);
+  let cardHeight = cardWidth * ASPECT_RATIO;
+
+  if (cardHeight > availableHeight) {
+    cardHeight = availableHeight;
+    cardWidth = cardHeight / ASPECT_RATIO;
+  }
+
+  // Внутрішні шрифти/відступи масштабуються відносно фактичної ширини картки,
+  // а не глобальної ширини екрана — так текст завжди виглядає пропорційно самій картці.
+  const cardScale = cardWidth / 300;
+  const cf = (size: number) => Math.round(size * cardScale);
+
   const rotation = useSharedValue(0);
   const bounce = useSharedValue(1);
 
@@ -83,35 +109,63 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled }: FlipCardPr
   };
 
   return (
-    <Pressable onPress={handlePress} style={styles.wrapper}>
+    <Pressable onPress={handlePress} style={{ width: cardWidth, height: cardHeight }}>
       {/* FRONT SIDE */}
-      <Animated.View style={[styles.face, frontStyle, Shadow.card]}>
+      <Animated.View
+        style={[styles.face, { width: cardWidth, height: cardHeight }, frontStyle, Shadow.card]}
+      >
         <LinearGradient colors={Gradients.cardFront} style={styles.cardFill}>
           {/* Top Edge Specular Reflection */}
           <View style={styles.specularEdge} />
 
-          <BlurView intensity={28} tint="light" style={styles.glassOverlay}>
+          <BlurView
+            intensity={28}
+            tint="light"
+            style={[
+              styles.glassOverlay,
+              { paddingVertical: cf(36), paddingHorizontal: cf(24) },
+            ]}
+          >
             <View style={styles.frontContent}>
               <View style={styles.logoWrapper}>
-                <FlamingoLogo size={110} />
+                <FlamingoLogo size={cf(110)} />
               </View>
-              <Text style={styles.title}>Вхламінго</Text>
-              <Text style={styles.subtitle}>ПАРТІ ІГРА</Text>
+              <Text style={[styles.title, { fontSize: font(34, 24, 40) * cardScale }]}>
+                Вхламінго
+              </Text>
+              <Text style={[styles.subtitle, { fontSize: cf(11) }]}>ПАРТІ ІГРА</Text>
             </View>
 
             <View style={styles.hintCapsule}>
-              <Text style={styles.hintText}>Торкніться, щоб перевернути ✨</Text>
+              <Text style={[styles.hintText, { fontSize: cf(13) }]}>
+                Торкніться, щоб перевернути ✨
+              </Text>
             </View>
           </BlurView>
         </LinearGradient>
       </Animated.View>
 
       {/* BACK SIDE */}
-      <Animated.View style={[styles.face, styles.faceBack, backStyle, Shadow.card]}>
+      <Animated.View
+        style={[
+          styles.face,
+          styles.faceBack,
+          { width: cardWidth, height: cardHeight },
+          backStyle,
+          Shadow.card,
+        ]}
+      >
         <LinearGradient colors={Gradients.cardBack} style={styles.cardFill}>
           <View style={styles.specularEdge} />
 
-          <BlurView intensity={22} tint="light" style={styles.glassOverlayBack}>
+          <BlurView
+            intensity={22}
+            tint="light"
+            style={[
+              styles.glassOverlayBack,
+              { paddingVertical: cf(28), paddingHorizontal: cf(22) },
+            ]}
+          >
             {card ? (
               <View style={styles.backContainer}>
                 {/* Category Badge Capsule */}
@@ -119,9 +173,12 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled }: FlipCardPr
                   colors={Gradients.badge}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={styles.badgeCapsule}
+                  style={[
+                    styles.badgeCapsule,
+                    { paddingVertical: cf(6), paddingHorizontal: cf(18) },
+                  ]}
                 >
-                  <Text style={styles.categoryTag}>{card.category}</Text>
+                  <Text style={[styles.categoryTag, { fontSize: cf(12) }]}>{card.category}</Text>
                 </LinearGradient>
 
                 {/* Safe Scrollable Task Container */}
@@ -130,18 +187,29 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled }: FlipCardPr
                   showsVerticalScrollIndicator={false}
                   bounces={false}
                 >
-                  <Text style={styles.taskText}>{card.text}</Text>
+                  <Text
+                    style={[
+                      styles.taskText,
+                      { fontSize: font(24, 18, 28) * cardScale, lineHeight: cf(34) },
+                    ]}
+                  >
+                    {card.text}
+                  </Text>
                 </ScrollView>
 
                 {/* Bottom Watermark Footer */}
                 <View style={styles.cardFooter}>
-                  <Text style={styles.footerBrand}>ВХЛАМІНГО 🦩</Text>
+                  <Text style={[styles.footerBrand, { fontSize: cf(10) }]}>ВХЛАМІНГО 🦩</Text>
                 </View>
               </View>
             ) : (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Картки закінчилися 🍾</Text>
-                <Text style={styles.emptySubtext}>Перемішайте колоду або виберіть інший режим</Text>
+                <Text style={[styles.emptyText, { fontSize: cf(22) }]}>
+                  Картки закінчилися 🍾
+                </Text>
+                <Text style={[styles.emptySubtext, { fontSize: cf(14) }]}>
+                  Перемішайте колоду або виберіть інший режим
+                </Text>
               </View>
             )}
           </BlurView>
@@ -152,15 +220,8 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled }: FlipCardPr
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    alignSelf: "center",
-  },
   face: {
     position: "absolute",
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
     borderRadius: Radius.xl,
     overflow: "hidden",
     backfaceVisibility: "hidden",
@@ -181,8 +242,6 @@ const styles = StyleSheet.create({
   },
   glassOverlay: {
     flex: 1,
-    paddingVertical: 36,
-    paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
@@ -191,8 +250,6 @@ const styles = StyleSheet.create({
   },
   glassOverlayBack: {
     flex: 1,
-    paddingVertical: 28,
-    paddingHorizontal: 22,
     borderWidth: 1,
     borderColor: Colors.glassBorderBottom,
     borderRadius: Radius.xl,
@@ -208,7 +265,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    fontSize: 34,
     fontWeight: "900",
     color: Colors.cream,
     letterSpacing: 1.5,
@@ -219,7 +275,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 11,
     fontWeight: "800",
     color: Colors.rosePink,
     letterSpacing: 3,
@@ -233,7 +288,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.2)",
   },
   hintText: {
-    fontSize: 13,
     fontWeight: "600",
     color: Colors.textSecondary,
     letterSpacing: 0.3,
@@ -244,14 +298,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badgeCapsule: {
-    paddingVertical: 6,
-    paddingHorizontal: 18,
     borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: "rgba(255, 42, 109, 0.3)",
   },
   categoryTag: {
-    fontSize: 12,
     fontWeight: "800",
     color: Colors.cream,
     textTransform: "uppercase",
@@ -264,11 +315,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   taskText: {
-    fontSize: 24,
     fontWeight: "700",
     color: Colors.cream,
     textAlign: "center",
-    lineHeight: 34,
     letterSpacing: 0.2,
   },
   cardFooter: {
@@ -276,7 +325,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   footerBrand: {
-    fontSize: 10,
     fontWeight: "800",
     color: Colors.textMuted,
     letterSpacing: 2,
@@ -288,14 +336,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyText: {
-    fontSize: 22,
     fontWeight: "800",
     color: Colors.cream,
     textAlign: "center",
     marginBottom: 8,
   },
   emptySubtext: {
-    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: "center",
   },

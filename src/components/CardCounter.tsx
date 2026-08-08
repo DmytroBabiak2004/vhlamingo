@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Colors, Radius, Shadow } from "@/constants/colors";
+import { useResponsive } from "@/utils/responsive";
 
 interface CardCounterProps {
   shown: number;
@@ -8,19 +9,21 @@ interface CardCounterProps {
 }
 
 export function CardCounter({ shown, total }: CardCounterProps) {
+  const { font, sw } = useResponsive();
   const progressPercent = total > 0 ? Math.min((shown / total) * 100, 100) : 0;
+  const fontSize = font(14, 12, 15);
 
   return (
-    <View style={[styles.pill, Shadow.subtle]}>
+    <View style={[styles.pill, Shadow.subtle, { paddingHorizontal: sw(20) }]}>
       {/* Specular Top Border Accent */}
       <View style={styles.topBorderHighlight} />
-      
+
       {/* Active Progress Capsule Fill */}
       <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
 
       <View style={styles.contentRow}>
         <View style={styles.liveIndicator} />
-        <Text style={styles.text}>
+        <Text style={{ fontSize, fontWeight: "700", letterSpacing: 0.8 }}>
           <Text style={styles.shownText}>{shown}</Text>
           <Text style={styles.dividerText}> / </Text>
           <Text style={styles.totalText}>{total}</Text>
@@ -34,7 +37,6 @@ const styles = StyleSheet.create({
   pill: {
     alignSelf: "center",
     paddingVertical: 8,
-    paddingHorizontal: 20,
     borderRadius: Radius.pill,
     backgroundColor: Colors.glassLight,
     borderWidth: 1,
@@ -69,11 +71,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: Colors.rosePink,
     marginRight: 8,
-  },
-  text: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.8,
   },
   shownText: {
     color: Colors.cream,

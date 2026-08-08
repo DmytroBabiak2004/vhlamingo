@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -21,15 +20,13 @@ import { Colors, Radius } from "@/constants/colors";
 import { useSettings } from "@/hooks/useSettings";
 import { getCustomCards, saveCustomCards } from "@/storage/storage";
 import { generateId } from "@/utils/shuffle";
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddCard">;
 
 export function AddCardScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const isSmallScreen = windowHeight < 670;
-  const isTablet = windowWidth >= 768;
+  const { isShortHeight, isTablet, font, clamp, height } = useResponsive();
 
   const { settings } = useSettings();
   const [text, setText] = useState("");
@@ -80,7 +77,8 @@ export function AddCardScreen({ navigation }: Props) {
     }
   };
 
-  const buttonHeight = isSmallScreen ? 44 : 50;
+  const buttonHeight = clamp(height * 0.06, 44, 52);
+  const titleSize = font(26, 20, 30);
 
   return (
     <GradientBackground>
@@ -99,7 +97,7 @@ export function AddCardScreen({ navigation }: Props) {
         >
           <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
             <Text
-              style={[styles.title, isSmallScreen && styles.smallTitle]}
+              style={[styles.title, { fontSize: titleSize }, isShortHeight && { marginBottom: 12 }]}
               maxFontSizeMultiplier={1.2}
             >
               Власні картки
@@ -112,7 +110,11 @@ export function AddCardScreen({ navigation }: Props) {
                 onChangeText={setText}
                 placeholder="Введи текст завдання..."
                 placeholderTextColor={Colors.textSecondary}
-                style={[styles.input, isSmallScreen && { minHeight: 50 }]}
+                style={[
+                  styles.input,
+                  { fontSize: font(15, 14, 17) },
+                  isShortHeight && { minHeight: 50 },
+                ]}
                 multiline
                 maxFontSizeMultiplier={1.2}
               />
@@ -131,16 +133,21 @@ export function AddCardScreen({ navigation }: Props) {
             <FlatList
               data={cards}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.list}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
-                <Text style={styles.emptyText} maxFontSizeMultiplier={1.2}>
+                <Text style={[styles.emptyText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
                   Ще немає власних карток
                 </Text>
               }
               renderItem={({ item }) => (
                 <GlassPanel style={styles.cardRow}>
-                  <Text style={styles.cardText} maxFontSizeMultiplier={1.2}>
+                  <Text
+                    style={[styles.cardText, { fontSize: font(14, 13, 16) }]}
+                    maxFontSizeMultiplier={1.2}
+                  >
                     {item.text}
                   </Text>
                   <View style={styles.rowActions}>
@@ -198,22 +205,15 @@ const styles = StyleSheet.create({
     maxWidth: 480,
   },
   title: {
-    fontSize: 26,
     fontWeight: "800",
     color: Colors.cream,
     marginBottom: 16,
   },
-  smallTitle: {
-    fontSize: 22,
-    marginBottom: 12,
-  },
   inputPanel: {
     marginBottom: 16,
-    padding: 14,
   },
   input: {
     color: Colors.cream,
-    fontSize: 15,
     minHeight: 60,
     textAlignVertical: "top",
   },
@@ -222,18 +222,23 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
   },
+  // FlatList потребує flex:1, інакше на малих екранах список не отримує доступного
+  // простору для прокрутки й може обрізатись/не скролитись коректно.
   list: {
+    flex: 1,
+    width: "100%",
+  },
+  listContent: {
     paddingBottom: 16,
+    flexGrow: 1,
   },
   emptyText: {
     color: Colors.textSecondary,
     textAlign: "center",
     marginTop: 30,
-    fontSize: 14,
   },
   cardRow: {
     marginBottom: 10,
-    padding: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -241,7 +246,6 @@ const styles = StyleSheet.create({
   cardText: {
     flex: 1,
     color: Colors.cream,
-    fontSize: 14,
     marginRight: 10,
     lineHeight: 20,
   },

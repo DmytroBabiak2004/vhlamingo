@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
@@ -9,20 +9,19 @@ import { GlowButton } from "@/components/GlowButton";
 import { FlamingoLogo } from "@/components/FlamingoLogo";
 import { Colors } from "@/constants/colors";
 import { useSettings } from "@/hooks/useSettings";
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "About">;
 
 export function AboutScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const isSmallScreen = windowHeight < 670;
-  const isTablet = windowWidth >= 768;
+  const { isShortHeight, isTablet, font, clamp, height } = useResponsive();
 
   const { settings } = useSettings();
 
-  const logoSize = isSmallScreen ? 75 : 90;
-  const buttonHeight = isSmallScreen ? 44 : 50;
+  const logoSize = clamp(height * 0.11, 70, 90);
+  const buttonHeight = clamp(height * 0.06, 44, 52);
+  const titleSize = font(28, 22, 32);
 
   return (
     <GradientBackground>
@@ -37,10 +36,10 @@ export function AboutScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
-          <View style={styles.logoWrapper}>
+          <View style={[styles.logoWrapper, isShortHeight && { marginBottom: 12 }]}>
             <FlamingoLogo size={logoSize} />
             <Text
-              style={[styles.title, isSmallScreen && styles.smallTitle]}
+              style={[styles.title, { fontSize: titleSize }]}
               maxFontSizeMultiplier={1.2}
             >
               Вхламінго
@@ -48,16 +47,19 @@ export function AboutScreen({ navigation }: Props) {
           </View>
 
           <GlassPanel style={styles.panel}>
-            <Text style={styles.text} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.text, { fontSize: font(15, 14, 17) }]} maxFontSizeMultiplier={1.2}>
               "Вхламінго" — це карткова гра для веселої компанії друзів. Кожна
               картка приховує завдання, жарт або виклик, які роблять вечір
               яскравішим.
             </Text>
-            <Text style={styles.text} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.text, { fontSize: font(15, 14, 17) }]} maxFontSizeMultiplier={1.2}>
               Додавайте власні картки, налаштовуйте гру під свою компанію та
               грайте знову і знову — колода щоразу перемішується по-новому.
             </Text>
-            <Text style={[styles.text, { marginBottom: 0 }]} maxFontSizeMultiplier={1.2}>
+            <Text
+              style={[styles.text, { fontSize: font(15, 14, 17), marginBottom: 0 }]}
+              maxFontSizeMultiplier={1.2}
+            >
               Грайте відповідально. 🦩
             </Text>
           </GlassPanel>
@@ -82,6 +84,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 20,
     alignItems: "center",
+    flexGrow: 1,
   },
   contentWrapper: {
     width: "100%",
@@ -96,20 +99,13 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 12,
-    fontSize: 28,
     fontWeight: "800",
     color: Colors.cream,
   },
-  smallTitle: {
-    fontSize: 24,
-    marginTop: 8,
-  },
   panel: {
     width: "100%",
-    padding: 16,
   },
   text: {
-    fontSize: 15,
     color: Colors.textPrimary,
     lineHeight: 22,
     marginBottom: 12,

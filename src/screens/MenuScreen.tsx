@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Alert,
-  Switch,
-  useWindowDimensions,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Alert, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
@@ -22,15 +14,13 @@ import {
   clearCustomCards,
   clearUsedCardIds,
 } from "@/storage/storage";
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Menu">;
 
 export function MenuScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const isSmallScreen = windowHeight < 670;
-  const isTablet = windowWidth >= 768;
+  const { isShortHeight, isTablet, font, clamp, height } = useResponsive();
 
   const { settings, update } = useSettings();
   const [customCount, setCustomCount] = useState(0);
@@ -71,7 +61,8 @@ export function MenuScreen({ navigation }: Props) {
     ]);
   };
 
-  const buttonHeight = isSmallScreen ? 44 : 50;
+  const buttonHeight = clamp(height * 0.06, 44, 52);
+  const titleSize = font(28, 22, 32);
 
   return (
     <GradientBackground>
@@ -87,7 +78,7 @@ export function MenuScreen({ navigation }: Props) {
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
           <Text
-            style={[styles.title, isSmallScreen && styles.smallTitle]}
+            style={[styles.title, { fontSize: titleSize }, isShortHeight && { marginBottom: 14 }]}
             maxFontSizeMultiplier={1.2}
           >
             Меню
@@ -95,16 +86,16 @@ export function MenuScreen({ navigation }: Props) {
 
           {/* Статистика колоди */}
           <GlassPanel style={styles.panel}>
-            <Text style={styles.panelTitle} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
               Колода
             </Text>
-            <Text style={styles.panelText} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
               Базових карток: {BASE_CARDS.length}
             </Text>
-            <Text style={styles.panelText} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
               Власних карток: {customCount}
             </Text>
-            <Text style={styles.panelText} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
               Усього: {BASE_CARDS.length + customCount}
             </Text>
           </GlassPanel>
@@ -112,7 +103,7 @@ export function MenuScreen({ navigation }: Props) {
           {/* Перемикачі Налаштувань */}
           <GlassPanel style={styles.panel}>
             <View style={styles.rowBetween}>
-              <Text style={styles.panelTitle} maxFontSizeMultiplier={1.2}>
+              <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
                 Звук
               </Text>
               <Switch
@@ -123,7 +114,7 @@ export function MenuScreen({ navigation }: Props) {
               />
             </View>
             <View style={[styles.rowBetween, { marginTop: 12 }]}>
-              <Text style={styles.panelTitle} maxFontSizeMultiplier={1.2}>
+              <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
                 Вібрація
               </Text>
               <Switch
@@ -136,7 +127,7 @@ export function MenuScreen({ navigation }: Props) {
           </GlassPanel>
 
           {/* Кнопки меню */}
-          <View style={[styles.buttonGroup, isSmallScreen && { gap: 10 }]}>
+          <View style={[styles.buttonGroup, isShortHeight && { gap: 10 }]}>
             <GlowButton
               label="Додати власні картки"
               onPress={() => navigation.navigate("AddCard")}
@@ -188,6 +179,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 20,
     alignItems: "center",
+    flexGrow: 1,
   },
   contentWrapper: {
     width: "100%",
@@ -196,27 +188,19 @@ const styles = StyleSheet.create({
     maxWidth: 480,
   },
   title: {
-    fontSize: 28,
     fontWeight: "800",
     color: Colors.cream,
     marginBottom: 18,
   },
-  smallTitle: {
-    fontSize: 24,
-    marginBottom: 14,
-  },
   panel: {
     marginBottom: 14,
-    padding: 14,
   },
   panelTitle: {
-    fontSize: 16,
     fontWeight: "700",
     color: Colors.cream,
     marginBottom: 4,
   },
   panelText: {
-    fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -228,6 +212,7 @@ const styles = StyleSheet.create({
   buttonGroup: {
     marginTop: 6,
     gap: 12,
+    width: "100%",
   },
   button: {
     width: "100%",

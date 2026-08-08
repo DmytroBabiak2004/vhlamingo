@@ -1,9 +1,8 @@
 import React, { PropsWithChildren } from "react";
-import { StyleSheet, View, Dimensions } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Gradients } from "@/constants/colors";
-
-const { width, height } = Dimensions.get("window");
+import { useResponsive } from "@/utils/responsive";
 
 interface GradientBackgroundProps extends PropsWithChildren {
   dark?: boolean;
@@ -11,9 +10,16 @@ interface GradientBackgroundProps extends PropsWithChildren {
 
 /**
  * Атмосферний адаптивний фон з неоновими розмитими свіченнями для вечірки.
+ * Розміри плям рахуються від поточних (а не "заморожених") розмірів вікна,
+ * тож коректно перераховуються при повороті екрана чи зміні розмірів (сплітскрін, веб).
  */
 export function GradientBackground({ children, dark }: GradientBackgroundProps) {
+  const { width, height, isTablet } = useResponsive();
   const colors = dark ? Gradients.backgroundDark : Gradients.background;
+
+  // На планшетах/великих екранах обмежуємо розмір плям, щоб вони не виглядали
+  // непропорційно величезними — орієнтуємось на меншу зі сторін.
+  const glowBase = isTablet ? Math.min(width, height) * 0.6 : width;
 
   return (
     <LinearGradient
@@ -23,9 +29,48 @@ export function GradientBackground({ children, dark }: GradientBackgroundProps) 
       style={styles.fill}
     >
       {/* Динамічні світящіся світлові плями, масштабовані під екрани */}
-      <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
-      <View pointerEvents="none" style={[styles.glow, styles.glowBottom]} />
-      <View pointerEvents="none" style={[styles.glow, styles.glowCenter]} />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.glow,
+          {
+            width: glowBase * 0.85,
+            height: glowBase * 0.85,
+            backgroundColor: Colors.rosePink,
+            opacity: 0.22,
+            top: -glowBase * 0.25,
+            right: -glowBase * 0.2,
+          },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.glow,
+          {
+            width: glowBase * 0.95,
+            height: glowBase * 0.95,
+            backgroundColor: Colors.crimson,
+            opacity: 0.25,
+            bottom: -glowBase * 0.3,
+            left: -glowBase * 0.25,
+          },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.glow,
+          {
+            width: glowBase * 0.6,
+            height: glowBase * 0.6,
+            backgroundColor: "#FF6B6B",
+            opacity: 0.12,
+            top: height * 0.35,
+            left: glowBase * 0.2,
+          },
+        ]}
+      />
 
       {children}
     </LinearGradient>
@@ -37,33 +82,13 @@ const styles = StyleSheet.create({
     flex: 1,
     position: "relative",
     backgroundColor: Colors.backgroundDark,
+    // Кола-підсвітки навмисно виходять за межі контейнера (для ефекту світіння
+    // на краю екрана), тому без overflow: "hidden" на вебі (react-native-web)
+    // вони збільшують висоту скролу сторінки, хоча видима область не змінюється.
+    overflow: "hidden",
   },
   glow: {
     position: "absolute",
     borderRadius: 999,
-  },
-  glowTop: {
-    width: width * 0.85,
-    height: width * 0.85,
-    backgroundColor: Colors.rosePink,
-    opacity: 0.22,
-    top: -width * 0.25,
-    right: -width * 0.2,
-  },
-  glowBottom: {
-    width: width * 0.95,
-    height: width * 0.95,
-    backgroundColor: Colors.crimson,
-    opacity: 0.25,
-    bottom: -width * 0.3,
-    left: -width * 0.25,
-  },
-  glowCenter: {
-    width: width * 0.6,
-    height: width * 0.6,
-    backgroundColor: "#FF6B6B",
-    opacity: 0.12,
-    top: height * 0.35,
-    left: width * 0.2,
   },
 });

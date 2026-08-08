@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
@@ -13,15 +13,13 @@ import { GradientBackground } from "@/components/GradientBackground";
 import { FlamingoLogo } from "@/components/FlamingoLogo";
 import { Colors } from "@/constants/colors";
 import { getRandomQuote } from "@/constants/quotes";
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
 
 export function SplashScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-
-  // Поріг для компактних пристроїв (iPhone SE, Telegram Webview)
-  const isSmallScreen = windowHeight < 670;
+  const { isTinyHeight, isTablet, font, clamp, height } = useResponsive();
 
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(24);
@@ -44,8 +42,8 @@ export function SplashScreen({ navigation }: Props) {
   }));
 
   // Адаптивні параметри
-  const logoSize = isSmallScreen ? 100 : 130;
-  const titleFontSize = isSmallScreen ? 34 : 42;
+  const logoSize = clamp(height * 0.15, 90, 150);
+  const titleFontSize = font(42, 30, 48);
 
   return (
     <GradientBackground>
@@ -58,7 +56,9 @@ export function SplashScreen({ navigation }: Props) {
           },
         ]}
       >
-        <Animated.View style={[styles.content, animatedStyle]}>
+        <Animated.View
+          style={[styles.content, isTablet && styles.tabletConstraint, animatedStyle]}
+        >
           <FlamingoLogo size={logoSize} />
           <Text
             style={[styles.title, { fontSize: titleFontSize }]}
@@ -66,10 +66,7 @@ export function SplashScreen({ navigation }: Props) {
           >
             Вхламінго
           </Text>
-          <Text
-            style={styles.subtitle}
-            maxFontSizeMultiplier={1.2}
-          >
+          <Text style={[styles.subtitle, { fontSize: font(15, 13, 17) }]} maxFontSizeMultiplier={1.2}>
             {quote}
           </Text>
         </Animated.View>
@@ -87,8 +84,11 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: "center",
-    maxWidth: 400, // Обмеження для планшетів та десктопу
+    maxWidth: 400,
     width: "100%",
+  },
+  tabletConstraint: {
+    maxWidth: 480,
   },
   title: {
     marginTop: 16,
@@ -99,7 +99,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 12,
-    fontSize: 15,
     lineHeight: 22,
     color: Colors.textSecondary,
     textAlign: "center",

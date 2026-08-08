@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { StyleSheet, Text, View, useWindowDimensions, LayoutChangeEvent } from "react-native";
+import { StyleSheet, Text, View, LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
@@ -14,26 +14,14 @@ import { Colors } from "@/constants/colors";
 import { useDeck } from "@/hooks/useDeck";
 import { useSettings } from "@/hooks/useSettings";
 import { playFlipSound } from "@/services/soundService";
-
-// Локальні хелпери для адаптивності
-const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
-const scaleFont = (fontSize: number, width: number) => Math.round((fontSize * width) / 375);
-
-const ScreenBreakpoints = {
-  isTinyHeight: (h: number) => h < 600,
-  isShortHeight: (h: number) => h < 670,
-  isTablet: (w: number) => w >= 768,
-};
+import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 export function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const isTinyHeight = ScreenBreakpoints.isTinyHeight(windowHeight);
-  const isShortHeight = ScreenBreakpoints.isShortHeight(windowHeight);
-  const isTablet = ScreenBreakpoints.isTablet(windowWidth);
+  const { width: windowWidth, height: windowHeight, isTinyHeight, isShortHeight, isTablet, clamp, font } =
+    useResponsive();
 
   const {
     currentCard,
@@ -91,11 +79,11 @@ export function HomeScreen({ navigation }: Props) {
   const headerHeight = clamp(windowHeight * 0.055, 38, 52);
   const logoSize = clamp(windowWidth * 0.075, 22, 32);
   const finishedLogoSize = clamp(windowWidth * 0.2, 60, 90);
-  const buttonHeight = clamp(windowHeight * 0.058, 42, 52);
-  const menuButtonSize = clamp(windowWidth * 0.1, 34, 40);
-  const headerTitleSize = clamp(scaleFont(16, windowWidth), 14, 19);
-  const finishedTitleSize = clamp(scaleFont(19, windowWidth), 16, 22);
-  const finishedSubtitleSize = clamp(scaleFont(12, windowWidth), 11, 14);
+  const buttonHeight = clamp(windowHeight * 0.058, 44, 54);
+  const menuButtonSize = clamp(windowWidth * 0.1, 36, 42);
+  const headerTitleSize = font(16, 14, 19);
+  const finishedTitleSize = font(19, 16, 22);
+  const finishedSubtitleSize = font(12, 11, 14);
 
   // Доступний простір під картку
   const cardMaxHeight = bodyHeight > 0 ? bodyHeight * 0.96 : windowHeight * 0.5;
@@ -118,6 +106,7 @@ export function HomeScreen({ navigation }: Props) {
               <FlamingoLogo size={logoSize} />
               <Text
                 style={[styles.headerTitle, { fontSize: headerTitleSize }]}
+                numberOfLines={1}
                 maxFontSizeMultiplier={1.2}
               >
                 ВХЛАМІНГО
@@ -126,6 +115,7 @@ export function HomeScreen({ navigation }: Props) {
             <GlowButton
               label="☰"
               variant="glass"
+              compact
               onPress={() => navigation.navigate("Menu")}
               style={{
                 ...styles.menuButton,
@@ -149,6 +139,7 @@ export function HomeScreen({ navigation }: Props) {
                   isFlipped={isFlipped}
                   onFlip={handleFlip}
                   hapticsEnabled={settings.hapticsEnabled}
+                  maxHeight={cardMaxHeight}
                 />
               </View>
             )}
@@ -250,6 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flexShrink: 1,
   },
   headerTitle: {
     fontWeight: "900",
@@ -258,12 +250,11 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    flexShrink: 1,
   },
   menuButton: {
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 0,
-    paddingHorizontal: 0,
   },
   body: {
     flex: 1,
