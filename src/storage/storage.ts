@@ -6,6 +6,7 @@ const KEYS = {
   SETTINGS: "@vhlamingo/settings",
   USED_CARD_IDS: "@vhlamingo/used_card_ids",
   REMOVED_BASE_CARD_IDS: "@vhlamingo/removed_base_card_ids",
+  AGE_CONFIRMED: "@vhlamingo/age_confirmed",
 } as const;
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -72,4 +73,18 @@ export async function getRemovedBaseCardIds(): Promise<string[]> {
 
 export async function saveRemovedBaseCardIds(ids: string[]): Promise<void> {
   await AsyncStorage.setItem(KEYS.REMOVED_BASE_CARD_IDS, JSON.stringify(ids));
+}
+
+/** Чи підтвердив користувач вік (18+) і застереження про відповідальну гру. */
+export async function getAgeConfirmed(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(KEYS.AGE_CONFIRMED);
+    return raw === "true";
+  } catch {
+    return false;
+  }
+}
+
+export async function saveAgeConfirmed(value: boolean): Promise<void> {
+  await AsyncStorage.setItem(KEYS.AGE_CONFIRMED, value ? "true" : "false");
 }
