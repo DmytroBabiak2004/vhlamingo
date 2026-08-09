@@ -50,9 +50,3 @@
 
 З питань щодо цієї політики звертайтесь: dimababjak2004@gmail.com
 
----
-
-**Примітка для розробника:** захостіть цей файл (наприклад, через GitHub Pages,
-Notion "Share to web" або будь-який простий статичний хостинг) і вкажіть
-робоче посилання в `src/constants/legal.ts` → `PRIVACY_POLICY_URL`, а також у
-відповідних полях App Store Connect / Google Play Console.
