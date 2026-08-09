@@ -10,6 +10,7 @@ import { FlipCard } from "@/components/FlipCard";
 import { GlowButton } from "@/components/GlowButton";
 import { CardCounter } from "@/components/CardCounter";
 import { FlamingoLogo } from "@/components/FlamingoLogo";
+import { BurgerIcon } from "@/components/BurgerIcon";
 import { Colors } from "@/constants/colors";
 import { useDeck } from "@/hooks/useDeck";
 import { useSettings } from "@/hooks/useSettings";
@@ -113,9 +114,10 @@ export function HomeScreen({ navigation }: Props) {
               </Text>
             </View>
             <GlowButton
-              label="☰"
+              label="Меню"
               variant="glass"
               compact
+              icon={<BurgerIcon size={menuButtonSize * 0.42} />}
               onPress={() => navigation.navigate("Menu")}
               style={{
                 ...styles.menuButton,

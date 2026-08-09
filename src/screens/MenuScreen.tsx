@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { StyleSheet, Text, View, ScrollView, Alert, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -9,41 +9,44 @@ import { GlowButton } from "@/components/GlowButton";
 import { Colors } from "@/constants/colors";
 import { BASE_CARDS } from "@/data/cards";
 import { useSettings } from "@/hooks/useSettings";
-import {
-  getCustomCards,
-  clearCustomCards,
-  clearUsedCardIds,
-} from "@/storage/storage";
+import { useCardsStore, resetAllToDefaults } from "@/store/cardsStore";
+import { clearUsedCardIds } from "@/storage/storage";
 import { useResponsive } from "@/utils/responsive";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Menu">;
+
+function SectionLabel({ children }: { children: string }) {
+  const { font } = useResponsive();
+  return (
+    <Text style={[styles.sectionLabel, { fontSize: font(12, 11, 13) }]} maxFontSizeMultiplier={1.2}>
+      {children}
+    </Text>
+  );
+}
 
 export function MenuScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { isShortHeight, isTablet, font, clamp, height } = useResponsive();
 
   const { settings, update } = useSettings();
-  const [customCount, setCustomCount] = useState(0);
+  const cardsState = useCardsStore();
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      getCustomCards().then((cards) => setCustomCount(cards.length));
-    });
-    return unsubscribe;
-  }, [navigation]);
+  const removedBaseCount = cardsState.removedBaseIds.length;
+  const activeBaseCount = BASE_CARDS.length - removedBaseCount;
+  const customCount = cardsState.customCards.length;
+  const totalActive = activeBaseCount + customCount;
 
-  const handleResetCustom = () => {
+  const handleResetEverything = () => {
     Alert.alert(
-      "Скинути власні картки?",
-      "Усі додані вами картки буде видалено безповоротно.",
+      "Скинути все до базових карток?",
+      "Усі власні картки буде видалено, а приховані базові картки — повернуто. Прогрес поточної гри теж скинеться.",
       [
         { text: "Скасувати", style: "cancel" },
         {
           text: "Скинути",
           style: "destructive",
           onPress: async () => {
-            await clearCustomCards();
-            setCustomCount(0);
+            await resetAllToDefaults();
           },
         },
       ]
@@ -77,35 +80,72 @@ export function MenuScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
-          <Text
-            style={[styles.title, { fontSize: titleSize }, isShortHeight && { marginBottom: 14 }]}
-            maxFontSizeMultiplier={1.2}
-          >
-            Меню
-          </Text>
+          <View style={styles.headerRow}>
+            <Text
+              style={[styles.title, { fontSize: titleSize }, isShortHeight && { marginBottom: 0 }]}
+              maxFontSizeMultiplier={1.2}
+            >
+              Меню
+            </Text>
+            <GlowButton
+              label="Закрити"
+              variant="glass"
+              compact
+              icon={<Text style={styles.closeGlyph}>✕</Text>}
+              onPress={() => navigation.goBack()}
+              style={styles.closeButton}
+              hapticsEnabled={settings.hapticsEnabled}
+            />
+          </View>
 
           {/* Статистика колоди */}
+          <SectionLabel>КОЛОДА</SectionLabel>
           <GlassPanel style={styles.panel}>
-            <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
-              Колода
-            </Text>
-            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
-              Базових карток: {BASE_CARDS.length}
-            </Text>
-            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
-              Власних карток: {customCount}
-            </Text>
-            <Text style={[styles.panelText, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
-              Усього: {BASE_CARDS.length + customCount}
-            </Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBlock}>
+                <Text style={[styles.statNumber, { fontSize: font(22, 19, 25) }]} maxFontSizeMultiplier={1.2}>
+                  {totalActive}
+                </Text>
+                <Text style={[styles.statCaption, { fontSize: font(11, 10, 12) }]} maxFontSizeMultiplier={1.2}>
+                  усього в грі
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBlock}>
+                <Text style={[styles.statNumber, { fontSize: font(22, 19, 25) }]} maxFontSizeMultiplier={1.2}>
+                  {activeBaseCount}
+                </Text>
+                <Text style={[styles.statCaption, { fontSize: font(11, 10, 12) }]} maxFontSizeMultiplier={1.2}>
+                  базових
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBlock}>
+                <Text style={[styles.statNumber, { fontSize: font(22, 19, 25) }]} maxFontSizeMultiplier={1.2}>
+                  {customCount}
+                </Text>
+                <Text style={[styles.statCaption, { fontSize: font(11, 10, 12) }]} maxFontSizeMultiplier={1.2}>
+                  власних
+                </Text>
+              </View>
+            </View>
+            {removedBaseCount > 0 && (
+              <Text style={[styles.removedNote, { fontSize: font(12, 11, 13) }]} maxFontSizeMultiplier={1.2}>
+                Приховано базових карток: {removedBaseCount}
+              </Text>
+            )}
           </GlassPanel>
 
           {/* Перемикачі Налаштувань */}
+          <SectionLabel>НАЛАШТУВАННЯ</SectionLabel>
           <GlassPanel style={styles.panel}>
-            <View style={styles.rowBetween}>
-              <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
-                Звук
-              </Text>
+            <View style={styles.switchRow}>
+              <View style={styles.switchLabelGroup}>
+                <Text style={styles.switchEmoji}>🔊</Text>
+                <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
+                  Звук
+                </Text>
+              </View>
               <Switch
                 value={settings.soundEnabled}
                 onValueChange={(v) => update({ soundEnabled: v })}
@@ -113,10 +153,14 @@ export function MenuScreen({ navigation }: Props) {
                 thumbColor={Colors.cream}
               />
             </View>
-            <View style={[styles.rowBetween, { marginTop: 12 }]}>
-              <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
-                Вібрація
-              </Text>
+            <View style={styles.rowSeparator} />
+            <View style={styles.switchRow}>
+              <View style={styles.switchLabelGroup}>
+                <Text style={styles.switchEmoji}>📳</Text>
+                <Text style={[styles.panelTitle, { fontSize: font(16, 14, 18) }]} maxFontSizeMultiplier={1.2}>
+                  Вібрація
+                </Text>
+              </View>
               <Switch
                 value={settings.hapticsEnabled}
                 onValueChange={(v) => update({ hapticsEnabled: v })}
@@ -126,49 +170,56 @@ export function MenuScreen({ navigation }: Props) {
             </View>
           </GlassPanel>
 
-          {/* Кнопки меню */}
+          {/* Керування картками */}
+          <SectionLabel>КАРТКИ</SectionLabel>
           <View style={[styles.buttonGroup, isShortHeight && { gap: 10 }]}>
             <GlowButton
-              label="Додати власні картки"
+              label="✏️  Керувати картками"
               onPress={() => navigation.navigate("AddCard")}
               style={{ ...styles.button, height: buttonHeight }}
               hapticsEnabled={settings.hapticsEnabled}
             />
             <GlowButton
-              label="Скинути власні картки"
-              variant="glass"
-              onPress={handleResetCustom}
-              style={{ ...styles.button, height: buttonHeight }}
-              hapticsEnabled={settings.hapticsEnabled}
-            />
-            <GlowButton
-              label="Перемішати колоду"
+              label="🔀  Перемішати колоду"
               variant="glass"
               onPress={handleReshuffleFromMenu}
               style={{ ...styles.button, height: buttonHeight }}
               hapticsEnabled={settings.hapticsEnabled}
             />
             <GlowButton
-              label="Правила гри"
+              label="♻️  Відновити базові картки"
+              variant="glass"
+              onPress={handleResetEverything}
+              style={{ ...styles.button, height: buttonHeight }}
+              hapticsEnabled={settings.hapticsEnabled}
+            />
+          </View>
+
+          {/* Інформація */}
+          <SectionLabel>ІНФОРМАЦІЯ</SectionLabel>
+          <View style={[styles.buttonGroup, isShortHeight && { gap: 10 }]}>
+            <GlowButton
+              label="📖  Правила гри"
               variant="glass"
               onPress={() => navigation.navigate("Rules")}
               style={{ ...styles.button, height: buttonHeight }}
               hapticsEnabled={settings.hapticsEnabled}
             />
             <GlowButton
-              label="Про гру"
+              label="🦩  Про гру"
               variant="glass"
               onPress={() => navigation.navigate("About")}
               style={{ ...styles.button, height: buttonHeight }}
               hapticsEnabled={settings.hapticsEnabled}
             />
-            <GlowButton
-              label="Назад до гри"
-              onPress={() => navigation.goBack()}
-              style={{ ...styles.button, height: buttonHeight }}
-              hapticsEnabled={settings.hapticsEnabled}
-            />
           </View>
+
+          <GlowButton
+            label="Назад до гри"
+            onPress={() => navigation.goBack()}
+            style={{ ...styles.backToGameButton, height: buttonHeight }}
+            hapticsEnabled={settings.hapticsEnabled}
+          />
         </View>
       </ScrollView>
     </GradientBackground>
@@ -187,35 +238,100 @@ const styles = StyleSheet.create({
   tabletConstraint: {
     maxWidth: 480,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
   title: {
     fontWeight: "800",
     color: Colors.cream,
-    marginBottom: 18,
+  },
+  closeButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeGlyph: {
+    color: Colors.cream,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  sectionLabel: {
+    color: Colors.textMuted,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    marginBottom: 8,
+    marginTop: 4,
   },
   panel: {
-    marginBottom: 14,
+    marginBottom: 18,
   },
-  panelTitle: {
-    fontWeight: "700",
-    color: Colors.cream,
-    marginBottom: 4,
-  },
-  panelText: {
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  rowBetween: {
+  statsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+  statBlock: {
+    flex: 1,
+    alignItems: "center",
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  statNumber: {
+    fontWeight: "800",
+    color: Colors.cream,
+  },
+  statCaption: {
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  removedNote: {
+    color: Colors.textMuted,
+    marginTop: 12,
+    textAlign: "center",
+  },
+  panelTitle: {
+    fontWeight: "700",
+    color: Colors.cream,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  switchLabelGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  switchEmoji: {
+    fontSize: 18,
+  },
+  rowSeparator: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginVertical: 10,
+  },
   buttonGroup: {
-    marginTop: 6,
+    marginBottom: 18,
     gap: 12,
     width: "100%",
   },
   button: {
     width: "100%",
     justifyContent: "center",
+  },
+  backToGameButton: {
+    width: "100%",
+    justifyContent: "center",
+    marginTop: 4,
   },
 });

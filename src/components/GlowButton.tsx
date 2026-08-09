@@ -18,6 +18,8 @@ interface GlowButtonProps {
   hapticsEnabled?: boolean;
   /** Для компактних (напр. круглих іконних) кнопок — прибирає горизонтальний внутрішній відступ. */
   compact?: boolean;
+  /** Кастомна іконка замість тексту (напр. акуратні лінії бургер-меню). `label` тоді йде лише в accessibilityLabel. */
+  icon?: React.ReactNode;
 }
 
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -35,6 +37,7 @@ export function GlowButton({
   style,
   hapticsEnabled = true,
   compact = false,
+  icon,
 }: GlowButtonProps) {
   const { font, sw } = useResponsive();
   const scale = useSharedValue(1);
@@ -80,16 +83,19 @@ export function GlowButton({
               { paddingHorizontal },
               borderRadiusOverride !== undefined && { borderRadius: borderRadiusOverride },
             ]}
+            accessibilityLabel={label}
           >
             <View style={styles.topEdgeHighlight} />
-            <Text
-              style={[styles.glassLabel, { fontSize }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              maxFontSizeMultiplier={1.2}
-            >
-              {label}
-            </Text>
+            {icon ?? (
+              <Text
+                style={[styles.glassLabel, { fontSize }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                maxFontSizeMultiplier={1.2}
+              >
+                {label}
+              </Text>
+            )}
           </View>
         </Pressable>
       </Animated.View>

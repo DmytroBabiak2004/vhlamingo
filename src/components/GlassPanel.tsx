@@ -1,11 +1,11 @@
 import React, { PropsWithChildren } from "react";
-import { StyleSheet, View, ViewStyle } from "react-native";
+import { StyleSheet, View, ViewStyle, StyleProp } from "react-native";
 import { BlurView } from "expo-blur";
 import { Colors, Radius, Shadow } from "@/constants/colors";
 import { useResponsive } from "@/utils/responsive";
 
 interface GlassPanelProps extends PropsWithChildren {
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   intensity?: number;
 }
 

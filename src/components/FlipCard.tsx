@@ -136,9 +136,14 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }:
               <Text style={[styles.subtitle, { fontSize: cf(11) }]}>ПАРТІ ІГРА</Text>
             </View>
 
-            <View style={styles.hintCapsule}>
-              <Text style={[styles.hintText, { fontSize: cf(13) }]}>
-                Торкніться, щоб перевернути ✨
+            <View style={[styles.hintCapsule, { paddingHorizontal: cf(16), paddingVertical: cf(8), maxWidth: cardWidth - cf(32) }]}>
+              <Text
+                style={[styles.hintText, { fontSize: cf(13) }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
+                Торкнись, щоб перевернути ✨
               </Text>
             </View>
           </BlurView>
@@ -281,8 +286,6 @@ const styles = StyleSheet.create({
   },
   hintCapsule: {
     backgroundColor: "rgba(255, 255, 255, 0.12)",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
     borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",

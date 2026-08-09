@@ -1,8 +1,7 @@
 import React, { PropsWithChildren } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Gradients } from "@/constants/colors";
-import { useResponsive } from "@/utils/responsive";
 
 interface GradientBackgroundProps extends PropsWithChildren {
   dark?: boolean;
@@ -14,11 +13,12 @@ interface GradientBackgroundProps extends PropsWithChildren {
  * тож коректно перераховуються при повороті екрана чи зміні розмірів (сплітскрін, веб).
  */
 export function GradientBackground({ children, dark }: GradientBackgroundProps) {
-  const { width, height, isTablet } = useResponsive();
+  const { width, height } = useWindowDimensions();
   const colors = dark ? Gradients.backgroundDark : Gradients.background;
 
   // На планшетах/великих екранах обмежуємо розмір плям, щоб вони не виглядали
   // непропорційно величезними — орієнтуємось на меншу зі сторін.
+  const isTablet = Math.min(width, height) > 600;
   const glowBase = isTablet ? Math.min(width, height) * 0.6 : width;
 
   return (

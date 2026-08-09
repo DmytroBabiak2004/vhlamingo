@@ -5,6 +5,7 @@ const KEYS = {
   CUSTOM_CARDS: "@vhlamingo/custom_cards",
   SETTINGS: "@vhlamingo/settings",
   USED_CARD_IDS: "@vhlamingo/used_card_ids",
+  REMOVED_BASE_CARD_IDS: "@vhlamingo/removed_base_card_ids",
 } as const;
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -58,4 +59,17 @@ export async function saveUsedCardIds(ids: string[]): Promise<void> {
 
 export async function clearUsedCardIds(): Promise<void> {
   await AsyncStorage.removeItem(KEYS.USED_CARD_IDS);
+}
+
+export async function getRemovedBaseCardIds(): Promise<string[]> {
+  try {
+    const raw = await AsyncStorage.getItem(KEYS.REMOVED_BASE_CARD_IDS);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveRemovedBaseCardIds(ids: string[]): Promise<void> {
+  await AsyncStorage.setItem(KEYS.REMOVED_BASE_CARD_IDS, JSON.stringify(ids));
 }
