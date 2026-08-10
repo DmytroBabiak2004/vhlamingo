@@ -119,18 +119,14 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }:
             <View style={styles.frontContent}>
               <View style={styles.logoWrapper}>
                 <Image
-                  source={require("@/assets/images/flamingo.png")}
+                  source={require("@/assets/images/flamingo2.png")}
                   style={{
-                    width: cf(220),
-                    height: cf(220),
+                      width: cf(235),
+                      height: cf(310),
                   }}
                   resizeMode="contain"
                 />
               </View>
-              <Text style={[styles.title, { fontSize: font(34, 24, 40) * cardScale }]}>
-                Вхламінго
-              </Text>
-              <Text style={[styles.subtitle, { fontSize: cf(11) }]}>ПАТІ ІГРА</Text>
             </View>
 
             <View style={[styles.hintCapsule, { paddingHorizontal: cf(16), paddingVertical: cf(8), maxWidth: cardWidth - cf(32) }]}>
