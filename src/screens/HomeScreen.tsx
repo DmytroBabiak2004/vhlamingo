@@ -81,8 +81,6 @@ export function HomeScreen({ navigation }: Props) {
   const logoSize = clamp(windowWidth * 0.075, 22, 32);
   const finishedLogoSize = clamp(windowWidth * 0.2, 60, 90);
   const buttonHeight = clamp(windowHeight * 0.058, 44, 54);
-  // Фіксований розмір — кнопці меню не потрібно "дихати" разом із шириною екрана,
-  // це лише робило її то ширшою, то вужчою на різних телефонах.
   const menuButtonSize = 40;
   const headerTitleSize = font(16, 14, 19);
   const finishedTitleSize = font(19, 16, 22);
@@ -159,8 +157,15 @@ export function HomeScreen({ navigation }: Props) {
 
             {deckJustFinished && (
               <View style={styles.finishedBox}>
-                <View style={styles.finishedLogoWrapper}>
-                  <FlamingoLogo size={finishedLogoSize} />
+               <View style={styles.finishedLogoWrapper}>
+                  <Image
+                    source={require("@/assets/images/flamingo.png")}
+                    style={{
+                      width: finishedLogoSize,
+                      height: finishedLogoSize,
+                    }}
+                    resizeMode="contain"
+                  />
                 </View>
                 <Text
                   style={[styles.finishedTitle, { fontSize: finishedTitleSize }]}

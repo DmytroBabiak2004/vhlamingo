@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, Alert, Switch } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
@@ -12,6 +12,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useCardsStore, resetAllToDefaults } from "@/store/cardsStore";
 import { clearUsedCardIds } from "@/storage/storage";
 import { useResponsive } from "@/utils/responsive";
+import { confirmDialog } from "@/utils/confirmDialog";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Menu">;
 
@@ -37,31 +38,29 @@ export function MenuScreen({ navigation }: Props) {
   const totalActive = activeBaseCount + customCount;
 
   const handleResetEverything = () => {
-    Alert.alert(
+    confirmDialog(
       "Скинути все до базових карток?",
       "Усі власні картки буде видалено, а приховані базові картки — повернуто. Прогрес поточної гри теж скинеться.",
-      [
-        { text: "Скасувати", style: "cancel" },
-        {
-          text: "Скинути",
-          style: "destructive",
-          onPress: async () => {
-            await resetAllToDefaults();
-          },
+      {
+        text: "Скинути",
+        style: "destructive",
+        onPress: async () => {
+          await resetAllToDefaults();
         },
-      ]
+      }
     );
   };
 
   const handleReshuffleFromMenu = () => {
-    Alert.alert("Колоду перемішано", "Поверніться на головний екран, щоб продовжити гру.", [
-      {
-        text: "Гаразд",
-        onPress: async () => {
-          await clearUsedCardIds();
-        },
-      },
-    ]);
+    // Це інформаційне повідомлення, а не запит підтвердження, але дія
+    // (clearUsedCardIds) виконується саме в onPress кнопки — на вебі
+    // порожня заглушка Alert.alert цей onPress ніколи не викличе, тож
+    // перемішування колоди мовчки "не спрацьовувало б". Виконуємо дію
+    // одразу, а сповіщення показуємо окремо через confirmDialog.
+    clearUsedCardIds();
+    confirmDialog("Колоду перемішано", "Поверніться на головний екран, щоб продовжити гру.", {
+      text: "Гаразд",
+    });
   };
 
   const buttonHeight = clamp(height * 0.06, 44, 52);

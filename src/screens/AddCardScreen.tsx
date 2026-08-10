@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -30,6 +29,7 @@ import {
   resetAllToDefaults,
 } from "@/store/cardsStore";
 import { useResponsive } from "@/utils/responsive";
+import { confirmDialog } from "@/utils/confirmDialog";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddCard">;
 
@@ -76,17 +76,14 @@ export function AddCardScreen({ navigation }: Props) {
   };
 
   const handleDeleteCustom = (id: string) => {
-    Alert.alert("Видалити картку?", "Цю дію не можна скасувати.", [
-      { text: "Скасувати", style: "cancel" },
-      {
-        text: "Видалити",
-        style: "destructive",
-        onPress: () => {
-          deleteCustomCard(id);
-          if (editingId === id) handleCancelEdit();
-        },
+    confirmDialog("Видалити картку?", "Цю дію не можна скасувати.", {
+      text: "Видалити",
+      style: "destructive",
+      onPress: () => {
+        deleteCustomCard(id);
+        if (editingId === id) handleCancelEdit();
       },
-    ]);
+    });
   };
 
   const handleToggleBaseCard = (card: GameCard) => {
@@ -98,13 +95,10 @@ export function AddCardScreen({ navigation }: Props) {
   };
 
   const handleResetEverything = () => {
-    Alert.alert(
+    confirmDialog(
       "Відновити всі базові картки?",
       "Власні картки буде видалено, а приховані базові — повернуто в гру.",
-      [
-        { text: "Скасувати", style: "cancel" },
-        { text: "Відновити", style: "destructive", onPress: () => resetAllToDefaults() },
-      ]
+      { text: "Відновити", style: "destructive", onPress: () => resetAllToDefaults() }
     );
   };
 

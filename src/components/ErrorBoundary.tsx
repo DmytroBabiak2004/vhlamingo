@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
 import { GradientBackground } from "@/components/GradientBackground";
 import { GlassPanel } from "@/components/GlassPanel";
 import { GlowButton } from "@/components/GlowButton";
@@ -15,13 +15,6 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-/**
- * Без цього будь-яка необроблена помилка рендеру (наприклад, пошкоджені
- * дані з AsyncStorage після оновлення версії) показує користувачу білий
- * порожній екран без жодної можливості відновитись, окрім видалення
- * застосунку. React-помилки можна перехопити лише в класовому компоненті —
- * хук для цього не існує.
- */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -33,10 +26,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // Тут — точка інтеграції для сервісу моніторингу збоїв (Sentry, Bugsnag тощо).
-    // Наприклад: Sentry.captureException(error, { extra: info });
     if (__DEV__) {
-      // eslint-disable-next-line no-console
       console.error("ErrorBoundary перехопив помилку:", error, info);
     }
   }
@@ -50,9 +40,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <GradientBackground>
           <View style={styles.container}>
-            <View style={styles.logoWrapper}>
-              <FlamingoLogo size={72} />
-            </View>
+          <View style={styles.logoWrapper}>
+            <Image
+              source={require("@/assets/images/flamingo.png")}
+              style={{
+                width: 80,
+                height: 80,
+              }}
+              resizeMode="contain"
+            />
+          </View>
             <Text style={styles.title}>Ой, щось пішло не так 🦩</Text>
 
             <GlassPanel style={styles.panel}>
