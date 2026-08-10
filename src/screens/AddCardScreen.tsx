@@ -236,7 +236,13 @@ export function AddCardScreen({ navigation }: Props) {
               renderItem={({ item }) => {
                 const isRemoved = tab === "base" && removedSet.has(item.id);
                 return (
-                  <GlassPanel style={[styles.cardRow, isRemoved && styles.cardRowRemoved]}>
+                  // Раніше тут стояв GlassPanel (реальний BlurView). У списку, що
+                  // скролиться, BlurView перераховує розмиття на кожен кадр і на Android
+                  // це інколи "з'їдало" дотик до останнього елемента в рядку (кнопка
+                  // видалення) — вона просто не встигала отримати подію натискання.
+                  // Для рядка картки справжнє розмиття непринципове візуально, тож
+                  // тут легкий View з тим самим виглядом замість BlurView.
+                  <View style={[styles.cardRow, isRemoved && styles.cardRowRemoved]}>
                     <View style={styles.cardTextGroup}>
                       <Text
                         style={[
@@ -265,14 +271,12 @@ export function AddCardScreen({ navigation }: Props) {
                           <Pressable
                             onPress={() => handleEdit(item)}
                             style={styles.iconButton}
-                            hitSlop={8}
                           >
                             <Text style={styles.iconText}>✏️</Text>
                           </Pressable>
                           <Pressable
                             onPress={() => handleDeleteCustom(item.id)}
                             style={styles.iconButton}
-                            hitSlop={8}
                           >
                             <Text style={styles.iconText}>🗑️</Text>
                           </Pressable>
@@ -281,13 +285,12 @@ export function AddCardScreen({ navigation }: Props) {
                         <Pressable
                           onPress={() => handleToggleBaseCard(item)}
                           style={[styles.iconButton, isRemoved && styles.restoreButton]}
-                          hitSlop={8}
                         >
                           <Text style={styles.iconText}>{isRemoved ? "↩️" : "🗑️"}</Text>
                         </Pressable>
                       )}
                     </View>
-                  </GlassPanel>
+                  </View>
                 );
               }}
             />
@@ -426,6 +429,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.glassBorderBottom,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   cardRowRemoved: {
     opacity: 0.5,
@@ -449,10 +458,17 @@ const styles = StyleSheet.create({
   },
   rowActions: {
     flexDirection: "row",
-    gap: 8,
+    // Раніше gap:8 разом з hitSlop:8 на обох кнопках давали зони дотику, що
+    // перекривались одна в одну впритул — дотик між іконками був неоднозначним
+    // і system майже завжди віддавав його першій (олівець), тож видалення
+    // фактично не спрацьовувало. Тепер відступ між кнопками більший за сумарний hitSlop.
+    gap: 16,
   },
   iconButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: Radius.sm,
     backgroundColor: "rgba(255,255,255,0.1)",
   },

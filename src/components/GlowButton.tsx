@@ -16,20 +16,12 @@ interface GlowButtonProps {
   variant?: "solid" | "glass";
   style?: ViewStyle;
   hapticsEnabled?: boolean;
-  /** Для компактних (напр. круглих іконних) кнопок — прибирає горизонтальний внутрішній відступ. */
   compact?: boolean;
-  /** Кастомна іконка замість тексту (напр. акуратні лінії бургер-меню). `label` тоді йде лише в accessibilityLabel. */
   icon?: React.ReactNode;
 }
 
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
-/**
- * Кнопка з підтримкою довільної висоти (передається через `style.height` з екрана).
- * Внутрішній контент завжди центрується по флексу, тож текст ніколи не обрізається
- * і не "виїжджає" за межі кнопки на маленьких екранах — на відміну від попередньої
- * версії, де фіксований paddingVertical конфліктував із динамічною висотою.
- */
 export function GlowButton({
   label,
   onPress,
@@ -41,13 +33,9 @@ export function GlowButton({
 }: GlowButtonProps) {
   const { font, sw } = useResponsive();
   const scale = useSharedValue(1);
-
   const fontSize = variant === "glass" ? font(16, 14, 18) : font(17, 15, 19);
-  const paddingHorizontal = compact ? sw(6) : sw(28);
-  // borderRadius (напр. для круглих іконних кнопок) має застосовуватись і до
-  // видимого внутрішнього контенту, інакше форма зʼявляється лише на невидимій обгортці.
+  const paddingHorizontal = compact ? sw(6) : sw(18);
   const borderRadiusOverride = style?.borderRadius as number | undefined;
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
@@ -91,6 +79,7 @@ export function GlowButton({
                 style={[styles.glassLabel, { fontSize }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
+                minimumFontScale={0.75}
                 maxFontSizeMultiplier={1.2}
               >
                 {label}
@@ -121,12 +110,12 @@ export function GlowButton({
             borderRadiusOverride !== undefined && { borderRadius: borderRadiusOverride },
           ]}
         >
-          {/* Внутрішній глянцевий відблиск */}
           <View style={styles.topEdgeHighlight} />
           <Text
             style={[styles.solidLabel, { fontSize }]}
             numberOfLines={1}
             adjustsFontSizeToFit
+            minimumFontScale={0.75}
             maxFontSizeMultiplier={1.2}
           >
             {label}
@@ -139,8 +128,7 @@ export function GlowButton({
 
 const styles = StyleSheet.create({
   defaultSize: {
-    minHeight: 48,
-    width: "100%",
+   width: "100%",
   },
   pressableFill: {
     flex: 1,

@@ -6,12 +6,6 @@ interface BurgerIconProps {
   size?: number;
 }
 
-/**
- * Раніше кнопка меню використовувала текстовий символ "☰", який по-різному
- * рендериться шрифтами різних платформ (нерівна товщина ліній, зміщення
- * по вертикалі) — це і виглядало "неідеально". Тут три лінії намальовані
- * View-компонентами, тож іконка виглядає однаково скрізь і чітко масштабується.
- */
 export function BurgerIcon({ size = 18 }: BurgerIconProps) {
   const barHeight = Math.max(2, Math.round(size * 0.11));
   const gap = Math.max(3, Math.round(size * 0.24));

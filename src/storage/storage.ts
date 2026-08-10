@@ -25,11 +25,19 @@ export async function getCustomCards(): Promise<GameCard[]> {
 }
 
 export async function saveCustomCards(cards: GameCard[]): Promise<void> {
-  await AsyncStorage.setItem(KEYS.CUSTOM_CARDS, JSON.stringify(cards));
+  try {
+    await AsyncStorage.setItem(KEYS.CUSTOM_CARDS, JSON.stringify(cards));
+  } catch (error) {
+    console.error("Failed to save custom cards:", error);
+  }
 }
 
 export async function clearCustomCards(): Promise<void> {
-  await AsyncStorage.removeItem(KEYS.CUSTOM_CARDS);
+  try {
+    await AsyncStorage.removeItem(KEYS.CUSTOM_CARDS);
+  } catch (error) {
+    console.error("Failed to clear custom cards:", error);
+  }
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -42,7 +50,11 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
-  await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+  try {
+    await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+  } catch (error) {
+    console.error("Failed to save settings:", error);
+  }
 }
 
 export async function getUsedCardIds(): Promise<string[]> {
@@ -55,11 +67,19 @@ export async function getUsedCardIds(): Promise<string[]> {
 }
 
 export async function saveUsedCardIds(ids: string[]): Promise<void> {
-  await AsyncStorage.setItem(KEYS.USED_CARD_IDS, JSON.stringify(ids));
+  try {
+    await AsyncStorage.setItem(KEYS.USED_CARD_IDS, JSON.stringify(ids));
+  } catch (error) {
+    console.error("Failed to save used card ids:", error);
+  }
 }
 
 export async function clearUsedCardIds(): Promise<void> {
-  await AsyncStorage.removeItem(KEYS.USED_CARD_IDS);
+  try {
+    await AsyncStorage.removeItem(KEYS.USED_CARD_IDS);
+  } catch (error) {
+    console.error("Failed to clear used card ids:", error);
+  }
 }
 
 export async function getRemovedBaseCardIds(): Promise<string[]> {
@@ -72,10 +92,13 @@ export async function getRemovedBaseCardIds(): Promise<string[]> {
 }
 
 export async function saveRemovedBaseCardIds(ids: string[]): Promise<void> {
-  await AsyncStorage.setItem(KEYS.REMOVED_BASE_CARD_IDS, JSON.stringify(ids));
+  try {
+    await AsyncStorage.setItem(KEYS.REMOVED_BASE_CARD_IDS, JSON.stringify(ids));
+  } catch (error) {
+    console.error("Failed to save removed base card ids:", error);
+  }
 }
 
-/** Чи підтвердив користувач вік (18+) і застереження про відповідальну гру. */
 export async function getAgeConfirmed(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(KEYS.AGE_CONFIRMED);
@@ -86,5 +109,9 @@ export async function getAgeConfirmed(): Promise<boolean> {
 }
 
 export async function saveAgeConfirmed(value: boolean): Promise<void> {
-  await AsyncStorage.setItem(KEYS.AGE_CONFIRMED, value ? "true" : "false");
+  try {
+    await AsyncStorage.setItem(KEYS.AGE_CONFIRMED, value ? "true" : "false");
+  } catch (error) {
+    console.error("Failed to save age confirmed:", error);
+  }
 }

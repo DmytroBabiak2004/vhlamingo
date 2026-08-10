@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { StyleSheet, Text, View, LayoutChangeEvent } from "react-native";
+import { StyleSheet, Text, View, LayoutChangeEvent, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
@@ -81,7 +81,9 @@ export function HomeScreen({ navigation }: Props) {
   const logoSize = clamp(windowWidth * 0.075, 22, 32);
   const finishedLogoSize = clamp(windowWidth * 0.2, 60, 90);
   const buttonHeight = clamp(windowHeight * 0.058, 44, 54);
-  const menuButtonSize = clamp(windowWidth * 0.1, 36, 42);
+  // Фіксований розмір — кнопці меню не потрібно "дихати" разом із шириною екрана,
+  // це лише робило її то ширшою, то вужчою на різних телефонах.
+  const menuButtonSize = 40;
   const headerTitleSize = font(16, 14, 19);
   const finishedTitleSize = font(19, 16, 22);
   const finishedSubtitleSize = font(12, 11, 14);
@@ -102,17 +104,26 @@ export function HomeScreen({ navigation }: Props) {
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
           {/* 1. Хедер */}
-          <View style={[styles.header, { height: headerHeight }]}>
-            <View style={styles.brandContainer}>
-              <FlamingoLogo size={logoSize} />
-              <Text
-                style={[styles.headerTitle, { fontSize: headerTitleSize }]}
-                numberOfLines={1}
-                maxFontSizeMultiplier={1.2}
-              >
-                ВХЛАМІНГО
-              </Text>
-            </View>
+<View style={[styles.header, { height: headerHeight }]}>
+  <View style={styles.brandContainer}>
+    <Image
+      source={require("@/assets/images/flamingo.png")}
+      style={{
+        width: logoSize,
+        height: logoSize,
+      }}
+      resizeMode="contain"
+    />
+
+    <Text
+      style={[styles.headerTitle, { fontSize: headerTitleSize }]}
+      numberOfLines={1}
+      maxFontSizeMultiplier={1.2}
+    >
+      ВХЛАМІНГО
+    </Text>
+  </View>
+
             <GlowButton
               label="Меню"
               variant="glass"

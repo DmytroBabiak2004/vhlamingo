@@ -7,17 +7,10 @@ interface GradientBackgroundProps extends PropsWithChildren {
   dark?: boolean;
 }
 
-/**
- * Атмосферний адаптивний фон з неоновими розмитими свіченнями для вечірки.
- * Розміри плям рахуються від поточних (а не "заморожених") розмірів вікна,
- * тож коректно перераховуються при повороті екрана чи зміні розмірів (сплітскрін, веб).
- */
 export function GradientBackground({ children, dark }: GradientBackgroundProps) {
   const { width, height } = useWindowDimensions();
   const colors = dark ? Gradients.backgroundDark : Gradients.background;
 
-  // На планшетах/великих екранах обмежуємо розмір плям, щоб вони не виглядали
-  // непропорційно величезними — орієнтуємось на меншу зі сторін.
   const isTablet = Math.min(width, height) > 600;
   const glowBase = isTablet ? Math.min(width, height) * 0.6 : width;
 
@@ -28,8 +21,7 @@ export function GradientBackground({ children, dark }: GradientBackgroundProps) 
       end={{ x: 0.9, y: 1 }}
       style={styles.fill}
     >
-      {/* Динамічні світящіся світлові плями, масштабовані під екрани */}
-      <View
+       <View
         pointerEvents="none"
         style={[
           styles.glow,
@@ -82,9 +74,6 @@ const styles = StyleSheet.create({
     flex: 1,
     position: "relative",
     backgroundColor: Colors.backgroundDark,
-    // Кола-підсвітки навмисно виходять за межі контейнера (для ефекту світіння
-    // на краю екрана), тому без overflow: "hidden" на вебі (react-native-web)
-    // вони збільшують висоту скролу сторінки, хоча видима область не змінюється.
     overflow: "hidden",
   },
   glow: {

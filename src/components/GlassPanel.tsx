@@ -9,34 +9,35 @@ interface GlassPanelProps extends PropsWithChildren {
   intensity?: number;
 }
 
-/**
- * Раніше `style` (напр. padding) застосовувався до зовнішнього wrapper,
- * а внутрішній BlurView мав власний фіксований padding: 22 — тобто відступи
- * подвоювались і панелі виглядали непропорційно "товстими" на малих екранах.
- * Тепер `style` іде напряму на внутрішній BlurView, а дефолтний padding
- * масштабується під розмір екрана.
- */
 export function GlassPanel({ children, style, intensity = 26 }: GlassPanelProps) {
   const { sw, clamp } = useResponsive();
   const defaultPadding = clamp(sw(20), 14, 22);
 
   return (
-    <View style={[styles.wrapper, Shadow.card]}>
-      {/* Highlight Edge for 3D Specular Look */}
-      <View style={styles.topEdgeHighlight} />
+    // 1. Додаємо переданий `style` сюди:
+    <View style={[styles.shadowWrapper, Shadow.card, style]}>
+      <View style={styles.wrapper}>
+        <View style={styles.topEdgeHighlight} />
 
-      <BlurView
-        intensity={intensity}
-        tint="light"
-        style={[styles.blur, { padding: defaultPadding }, style]}
-      >
-        {children}
-      </BlurView>
+        <BlurView
+          intensity={intensity}
+          tint="light"
+          // 2. Прибираємо `style` звідси (залишаємо тільки padding):
+          style={[styles.blur, { padding: defaultPadding }]}
+        >
+          {children}
+        </BlurView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shadowWrapper: {
+    borderRadius: Radius.lg,
+    width: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.01)",
+  },
   wrapper: {
     borderRadius: Radius.lg,
     overflow: "hidden",

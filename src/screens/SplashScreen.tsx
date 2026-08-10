@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
@@ -56,16 +56,24 @@ export function SplashScreen({ navigation }: Props) {
           },
         ]}
       >
-        <Animated.View
-          style={[styles.content, isTablet && styles.tabletConstraint, animatedStyle]}
-        >
-          <FlamingoLogo size={logoSize} />
-          <Text
-            style={[styles.title, { fontSize: titleFontSize }]}
-            maxFontSizeMultiplier={1.2}
-          >
-            Вхламінго
-          </Text>
+<Animated.View
+  style={[styles.content, isTablet && styles.tabletConstraint, animatedStyle]}
+>
+  <Image
+    source={require("@/assets/images/flamingo.png")}
+    style={{
+      width: logoSize,
+      height: logoSize,
+    }}
+    resizeMode="contain"
+  />
+
+  <Text
+    style={[styles.title, { fontSize: titleFontSize }]}
+    maxFontSizeMultiplier={1.2}
+  >
+    Вхламінго
+  </Text>
           <Text style={[styles.subtitle, { fontSize: font(15, 13, 17) }]} maxFontSizeMultiplier={1.2}>
             {quote}
           </Text>

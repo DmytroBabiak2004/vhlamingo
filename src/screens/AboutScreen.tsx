@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, Pressable, Linking } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Pressable, Linking, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types";
@@ -38,7 +38,14 @@ export function AboutScreen({ navigation }: Props) {
       >
         <View style={[styles.contentWrapper, isTablet && styles.tabletConstraint]}>
           <View style={[styles.logoWrapper, isShortHeight && { marginBottom: 12 }]}>
-            <FlamingoLogo size={logoSize} />
+          <Image
+  source={require("@/assets/images/flamingo.png")}
+  style={{
+    width: logoSize,
+    height: logoSize,
+  }}
+  resizeMode="contain"
+/>
             <Text
               style={[styles.title, { fontSize: titleSize }]}
               maxFontSizeMultiplier={1.2}

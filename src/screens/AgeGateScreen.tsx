@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import { StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/GradientBackground";
 import { GlassPanel } from "@/components/GlassPanel";
@@ -14,12 +14,6 @@ interface AgeGateScreenProps {
   onConfirm: () => void;
 }
 
-/**
- * Показується один раз при першому запуску (до будь-якого іншого екрана),
- * поки користувач не підтвердить, що йому 18+ і він ознайомлений із
- * застереженням про відповідальну гру. Підтвердження зберігається в
- * AsyncStorage, тому вдруге цей екран не зʼявляється.
- */
 export function AgeGateScreen({ onConfirm }: AgeGateScreenProps) {
   const insets = useSafeAreaInsets();
   const { isTablet, font, clamp, height } = useResponsive();
@@ -68,19 +62,26 @@ export function AgeGateScreen({ onConfirm }: AgeGateScreenProps) {
           { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 16 },
         ]}
       >
-        <View style={[styles.content, isTablet && styles.tabletConstraint]}>
-          <View style={styles.logoWrapper}>
-            <FlamingoLogo size={logoSize} />
-          </View>
+<View style={[styles.content, isTablet && styles.tabletConstraint]}>
+  <View style={styles.logoWrapper}>
+    <Image
+      source={require("@/assets/images/flamingo.png")}
+      style={{
+        width: logoSize,
+        height: logoSize,
+      }}
+      resizeMode="contain"
+    />
+  </View>
 
-          <Text
-            style={[styles.title, { fontSize: titleSize }]}
-            maxFontSizeMultiplier={1.2}
-          >
-            {AGE_GATE_TITLE}
-          </Text>
+  <Text
+    style={[styles.title, { fontSize: titleSize }]}
+    maxFontSizeMultiplier={1.2}
+  >
+    {AGE_GATE_TITLE}
+  </Text>
 
-          <GlassPanel style={styles.panel}>
+  <GlassPanel style={styles.panel}>
             <Text style={[styles.body, { fontSize: font(14, 13, 16) }]} maxFontSizeMultiplier={1.2}>
               {AGE_GATE_BODY}
             </Text>

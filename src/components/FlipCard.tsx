@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Text, View, Pressable, ScrollView } from "react-native";
+import { StyleSheet, Text, View, Pressable, ScrollView, Image } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -15,7 +15,7 @@ import { Colors, Gradients, Radius, Shadow } from "@/constants/colors";
 import { FlamingoLogo } from "@/components/FlamingoLogo";
 import { useResponsive } from "@/utils/responsive";
 
-const ASPECT_RATIO = 1.42; // height / width, як у початковому дизайні
+const ASPECT_RATIO = 1.42; 
 
 export interface GameCard {
   id?: string;
@@ -28,17 +28,9 @@ interface FlipCardProps {
   isFlipped: boolean;
   onFlip: () => void;
   hapticsEnabled: boolean;
-  /** Максимальна доступна висота під картку (від батьківського екрана). Якщо не задано — рахується від висоти вікна. */
   maxHeight?: number;
 }
 
-/**
- * Картка тепер повністю реактивна: розміри рахуються від поточних width/height
- * (а не одноразово при завантаженні модуля через Dimensions.get), тож коректно
- * підлаштовується під поворот екрана, спліт-скрін, різні телефони й планшети.
- * Якщо картка за шириною не влазить по висоті (низькі екрани на кшталт iPhone SE
- * в альбомній орієнтації) — розмір рахується від висоти, а не від ширини.
- */
 export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }: FlipCardProps) {
   const { width, height, isTablet, font, sw } = useResponsive();
 
@@ -53,8 +45,6 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }:
     cardWidth = cardHeight / ASPECT_RATIO;
   }
 
-  // Внутрішні шрифти/відступи масштабуються відносно фактичної ширини картки,
-  // а не глобальної ширини екрана — так текст завжди виглядає пропорційно самій картці.
   const cardScale = cardWidth / 300;
   const cf = (size: number) => Math.round(size * cardScale);
 
@@ -128,12 +118,19 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }:
           >
             <View style={styles.frontContent}>
               <View style={styles.logoWrapper}>
-                <FlamingoLogo size={cf(110)} />
+                <Image
+                  source={require("@/assets/images/flamingo.png")}
+                  style={{
+                    width: cf(150),
+                    height: cf(150),
+                  }}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={[styles.title, { fontSize: font(34, 24, 40) * cardScale }]}>
                 Вхламінго
               </Text>
-              <Text style={[styles.subtitle, { fontSize: cf(11) }]}>ПАРТІ ІГРА</Text>
+              <Text style={[styles.subtitle, { fontSize: cf(11) }]}>ПАТІ ІГРА</Text>
             </View>
 
             <View style={[styles.hintCapsule, { paddingHorizontal: cf(16), paddingVertical: cf(8), maxWidth: cardWidth - cf(32) }]}>
