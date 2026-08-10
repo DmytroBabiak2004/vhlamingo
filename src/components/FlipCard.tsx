@@ -121,8 +121,8 @@ export function FlipCard({ card, isFlipped, onFlip, hapticsEnabled, maxHeight }:
                 <Image
                   source={require("@/assets/images/flamingo.png")}
                   style={{
-                    width: cf(150),
-                    height: cf(150),
+                    width: cf(300),
+                    height: cf(300),
                   }}
                   resizeMode="contain"
                 />
